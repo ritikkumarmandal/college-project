@@ -7,7 +7,7 @@ function ViewSubjects() {
   const [semester, setSemester] = useState("");
   const [subjects, setSubjects] = useState([]);
 
-  const departments = ["CSE", "ECE", "EE", "ME", "CE"];
+  const departments = ["CSE", "ECE", "EE", "ME", "CE","CECA"];
 
   const fetchSubjects = async () => {
     if (!department || !semester) {

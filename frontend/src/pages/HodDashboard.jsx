@@ -10,6 +10,17 @@ import CreateSubject from "../components/CreateSubject";
 import ViewSubjects from "../components/ViewSubjects";
 import AssignClass from "../components/AssignClass";
 
+const WelcomeBanner = () => (
+  <div className="bg-white p-6 rounded-xl shadow mb-6">
+    <h2 className="text-xl font-semibold">
+      Welcome HOD 👋
+    </h2>
+    <p className="text-gray-500 mt-2">
+      Select an option from the sidebar.
+    </p>
+  </div>
+);
+
 function HodDashboard() {
 
   const [activePage, setActivePage] = useState("home");
@@ -36,14 +47,11 @@ case "view-subjects":
   return <AssignClass />;
       default:
         return (
-          <div className="bg-white p-6 rounded-xl shadow sticky top-0 z-10">
-            <h2 className="text-xl font-semibold">
-              Welcome HOD 👋
-            </h2>
-            <p className="text-gray-500 mt-2">
-              Select an option from the sidebar.
-            </p>
-          </div>
+           <div className="bg-white p-6 rounded-xl shadow">
+      <p className="text-gray-500">
+        Please select an option from sidebar.
+      </p>
+    </div>
         );
     }
   };
@@ -110,6 +118,7 @@ case "view-subjects":
 
       {/* RIGHT CONTENT */}
       <div className="flex-1 bg-gray-100 p-8">
+        < WelcomeBanner />
         {renderContent()}
       </div>
 

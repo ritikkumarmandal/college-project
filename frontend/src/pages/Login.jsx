@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginHod, loginfaculty } from "../services/authService";
+import { loginHod, loginfaculty ,loginStudent} from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
@@ -36,6 +36,17 @@ function Login() {
         res = await loginfaculty(formData);
       }
 
+      else if (roleType === "STUDENT") {
+  res = await loginStudent(formData);
+      
+  console.log(res.data); // 👈 debug
+  // 🔥 First time user check
+  if (res.data.firstTime) {
+    navigate("/set-password", { state: { email: formData.email } });
+    return;
+  }
+}
+
       const { token, role } = res.data;
 
       // ✅ Save auth data
@@ -49,7 +60,12 @@ function Login() {
         navigate("/hod-dashboard");
       } else if (role === "FACULTY") {
         navigate("/faculty-dashboard");
-      } else {
+      }
+         else if (role === "STUDENT") {
+       navigate("/student-dashboard");
+
+} 
+       else {
         navigate("/");
       }
 
@@ -68,10 +84,7 @@ function Login() {
         {/* LEFT SIDE */}
         <div className="w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center relative p-10">
 
-          <h1 className="absolute left-4 top-10 rotate-[-90deg] text-3xl font-bold opacity-70">
-            Welcome
-          </h1>
-
+          
           <img
             src="https://cdn-icons-png.flaticon.com/512/295/295128.png"
             alt="login"
@@ -100,6 +113,7 @@ function Login() {
             >
               <option value="HOD">HOD</option>
               <option value="FACULTY">Faculty</option>
+               <option value="STUDENT">Student</option>
             </select>
 
             {/* EMAIL */}
@@ -141,6 +155,13 @@ function Login() {
               Sign Up
             </span>
           </p>
+
+          <p
+  onClick={() => navigate("/set-password")}
+  className="text-teal-500 text-sm cursor-pointer mt-2"
+>
+  First time user? Set Password
+</p>
 
         </div>
       </div>

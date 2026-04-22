@@ -66,9 +66,7 @@ function Register() {
         {/* LEFT SIDE */}
         <div className="w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center relative p-10">
 
-          <h1 className="absolute left-4 top-10 rotate-[-90deg] text-3xl font-bold opacity-70">
-            Register
-          </h1>
+         
 
           <img
             src="https://cdn-icons-png.flaticon.com/512/295/295128.png"
@@ -98,7 +96,7 @@ function Register() {
             >
               <option value="HOD">HOD Register</option>
               <option value="FACULTY">Faculty Register</option>
-              <option value="STUDENT">Student Register</option>
+             
             </select>
 
             {/* NAME */}

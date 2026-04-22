@@ -1,5 +1,7 @@
 import XLSX from "xlsx";
 import Student from "../models/Student.models.js";
+import bcrypt from "bcryptjs";
+
 
 
 export const createStudent = async (req,res)=>{
@@ -13,7 +15,9 @@ name,
 email,
 regNumber,
 department,
-semester
+semester,
+password: null,        
+ isFirstLogin: true     
 });
 
 await student.save();
@@ -31,6 +35,75 @@ error:error.message
 
 }
 
+};
+
+
+
+export const loginStudent = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const student = await Student.findOne({ email });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // 🔥 First time user
+    if (!student.password) {
+      return res.status(200).json({
+        message: "Please set password first",
+        firstTime: true
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, student.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+
+    // ✅ SUCCESS RESPONSE (IMPORTANT)
+    res.status(200).json({
+      message: "Login successful",
+      student,
+      role: "STUDENT",        // 👈 add this
+      token: "dummy-token",   // 👈 later JWT use karna
+      firstTime: false        // 👈 VERY IMPORTANT
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+export const setPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    const student = await Student.findOne({ email });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    student.password = hashedPassword;
+    student.isFirstLogin = false;
+
+    await student.save();
+
+    res.status(200).json({
+      message: "Password set successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 export const getAllStudents = async (req,res)=>{

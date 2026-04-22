@@ -6,11 +6,7 @@ export const registerUser = async (userData) => {
   return response.data;
 };
 
-// Login API
-/*export const loginUser = async (userData) => {
-  const response = await api.post("/login", userData);
-  return response.data;
-};*/
+
 
 // faculty registaration
 export const registerFaculty = async(userData) =>{
@@ -21,19 +17,11 @@ export const registerFaculty = async(userData) =>{
   export const loginHod = (data) =>
   api.post("/login", data);
 
-// FACULTY SEND OTP
-//export const sendFacultyOtp = (data) =>
-  //api.post("/send-otp", data);
-
-// FACULTY VERIFY OTP
-//export const verifyFacultyOtp = (data) =>
-  //api.post("verify-otp", data);
-
 export const loginfaculty = (data) =>
   api.post("/faculty/login", data);
 
 export const createstudent = (data) =>
-  api.post("/create", data );
+  api.post("/students/create", data );
 
  export const uploadStudents = async (file) => {
 
@@ -80,7 +68,7 @@ export const markAttendance = (data) =>
   api.post("/attendance", data);
 
 export const getStudentsByClass = (department, semester) =>
-  api.get("/students", {
+  api.get("/students/students", {
     params: { department, semester }
   });
 
@@ -93,3 +81,9 @@ export const getAttendanceReport = (department, semester, subjectId) =>
   api.get("/report", {
     params: { department, semester, subjectId }
   });
+
+  export const loginStudent = (data) =>
+  api.post("/students/login", data);
+
+  export const setStudentPassword = (data) =>
+  api.post("/students/set-password", data);

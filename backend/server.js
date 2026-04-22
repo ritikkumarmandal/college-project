@@ -22,7 +22,7 @@ connectDB();
 
 // simple route
 app.use('/api',facultyroutes );
-app.use('/api', studentRoutes);
+app.use('/api/students', studentRoutes);
 app.use('/api', userRoutes);
 app.use('/api', subjectRoutes);
 app.use('/api',classAssignRoutes);

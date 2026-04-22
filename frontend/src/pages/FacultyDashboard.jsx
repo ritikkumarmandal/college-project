@@ -4,6 +4,17 @@ import FacultyShowClass from "../components/FacultyShowClass";
 import MarkAttendance from "../components/MarkAttendance";
 import AttendanceSheet from "../components/AttendanceSheet";
 
+const WelcomeBanner = () => (
+  <div className="bg-white p-6 rounded-xl shadow mb-6">
+    <h2 className="text-xl font-semibold">
+      Welcome Faculty 👋
+    </h2>
+    <p className="text-gray-500 mt-2">
+      Select an option from the sidebar.
+    </p>
+  </div>
+);
+
 function FacultyDashboard() {
 
   const [activePage, setActivePage] = useState("home");
@@ -35,13 +46,10 @@ function FacultyDashboard() {
       default:
         return (
           <div className="bg-white p-6 rounded-xl shadow">
-            <h2 className="text-xl font-semibold">
-              Welcome Faculty 👋
-            </h2>
-            <p className="text-gray-500 mt-2">
-              Select an option from the sidebar.
-            </p>
-          </div>
+      <p className="text-gray-500">
+        Please select an option from sidebar.
+      </p>
+    </div>
         );
     }
   };
@@ -84,6 +92,7 @@ function FacultyDashboard() {
 
       {/* RIGHT CONTENT */}
       <div className="flex-1 bg-gray-100 p-8">
+        < WelcomeBanner />
         {renderContent()}
       </div>
 
