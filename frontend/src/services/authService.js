@@ -30,7 +30,7 @@ export const createstudent = (data) =>
   // backend me upload.single("file") hai
   formData.append("file", file);
 
-  const response = await api.post("/upload", formData, {
+  const response = await api.post("/students/upload", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -48,11 +48,11 @@ export const getAllFaculty = async () => {
 
 // CREATE SUBJECT
 export const createSubject = (data) =>
-  api.post("/subject/create", data);
+  api.post("/subjects/create", data);
 
 // GET SUBJECTS
 export const getSubjects = (department, semester) =>
-  api.get(`/subject?department=${department}&semester=${semester}`);
+  api.get(`/subjects?department=${department}&semester=${semester}`);
 
 
 // Assign class to faculty
@@ -87,3 +87,58 @@ export const getAttendanceReport = (department, semester, subjectId) =>
 
   export const setStudentPassword = (data) =>
   api.post("/students/set-password", data);
+
+
+  
+export const getStudentSubjects = () =>
+  api.get("/subjects/student");
+
+export const getStudentAttendance = () =>
+  api.get("/students/showattendence");
+
+export const getStudentCalendarAttendance =()=>  api.get(
+   `/student/calendar/${subjectId}`
+);
+
+export const getAttendanceDates =
+  (subjectId) =>
+    api.get(
+      `/faculty/attendance-dates/${subjectId}`
+    );
+
+export const getAttendanceByDate =
+  (subjectId, date) =>
+    api.get(
+      `/faculty/date-attendance/${subjectId}/${date}`
+    );
+
+    // services/authService.js
+
+export const downloadReport = (
+  subjectId,
+  type,
+  date
+) =>
+  api.get(
+    `/report/download-report?subjectId=${subjectId}&type=${type}&date=${date}`,
+    {
+      responseType: "blob",
+    }
+  );
+
+
+  export const updateAttendance =
+  async (
+    attendanceId,
+    students
+  ) => {
+
+    return axios.put(
+
+      `${API}/update/${attendanceId}`,
+
+      { students }
+
+    );
+
+};

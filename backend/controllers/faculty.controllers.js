@@ -2,6 +2,7 @@ import Faculty from "../models/faculty.models.js";
 import ClassAssign from "../models/classAssign.models.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import Attendance from "../models/Attendance.models.js";
 
 
 
@@ -258,3 +259,139 @@ export const getFacultyClasses = async (req, res) => {
   }
 };
 
+
+
+
+// ==========================================
+// GET ALL ATTENDANCE DATES
+// ==========================================
+
+export const getAttendanceDates =
+  async (req, res) => {
+
+    try {
+
+      const { subjectId } =
+        req.params;
+
+      const records =
+        await Attendance.find({
+          subject: subjectId,
+        });
+
+      const result =
+        records.map((record) => {
+
+          // YYYY-MM-DD
+          const formattedDate =
+            new Date(record.date)
+              .toISOString()
+              .split("T")[0];
+
+          // Any Present?
+          const hasPresent =
+            record.students.some(
+              (s) =>
+                s.status ===
+                "Present"
+            );
+
+          return {
+
+            date:
+              formattedDate,
+
+            status:
+              hasPresent
+                ? "Present"
+                : "Absent",
+
+          };
+        });
+
+      res.json(result);
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Failed to fetch dates",
+      });
+
+    }
+};
+
+
+// ==========================================
+// GET ATTENDANCE BY DATE
+// ==========================================
+
+export const getAttendanceByDate =
+  async (req, res) => {
+
+    try {
+
+      const {
+        subjectId,
+        date,
+      } = req.params;
+
+      const records =
+        await Attendance.find({
+          subject: subjectId,
+        });
+
+      const attendance =
+        records.find((record) => {
+
+          const formattedDate =
+            new Date(record.date)
+              .toISOString()
+              .split("T")[0];
+
+          return (
+            formattedDate ===
+            date
+          );
+        });
+
+      if (!attendance) {
+
+        return res.status(404).json({
+          message:
+            "No attendance found",
+        });
+
+      }
+
+      // ONLY PRESENT STUDENTS
+      const presentStudents =
+        attendance.students.filter(
+          (s) =>
+            s.status ===
+            "Present"
+        );
+
+      res.json({
+
+        date:
+          attendance.date,
+
+        students:
+          presentStudents,
+
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Failed to fetch attendance",
+      });
+
+    }
+};

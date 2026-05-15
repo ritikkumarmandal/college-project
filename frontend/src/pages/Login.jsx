@@ -39,7 +39,7 @@ function Login() {
       else if (roleType === "STUDENT") {
   res = await loginStudent(formData);
       
-  console.log(res.data); // 👈 debug
+  
   // 🔥 First time user check
   if (res.data.firstTime) {
     navigate("/set-password", { state: { email: formData.email } });

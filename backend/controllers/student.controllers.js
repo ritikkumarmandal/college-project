@@ -1,7 +1,8 @@
 import XLSX from "xlsx";
 import Student from "../models/Student.models.js";
 import bcrypt from "bcryptjs";
-
+import jwt from "jsonwebtoken";
+import Attendance from "../models/Attendance.models.js";
 
 
 export const createStudent = async (req,res)=>{
@@ -39,6 +40,7 @@ error:error.message
 
 
 
+
 export const loginStudent = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -63,13 +65,23 @@ export const loginStudent = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    // ✅ SUCCESS RESPONSE (IMPORTANT)
+    // ✅ 🔥 REAL JWT TOKEN BAN RAHA HAI
+    const token = jwt.sign(
+      {
+        id: student._id,
+        email: student.email,
+        regNumber: student.regNumber,
+        role: "STUDENT"
+      },
+      process.env.JWT_SECRET,   // 🔐 .env me rakho
+      { expiresIn: "1d" }
+    );
+
     res.status(200).json({
       message: "Login successful",
-      student,
-      role: "STUDENT",        // 👈 add this
-      token: "dummy-token",   // 👈 later JWT use karna
-      firstTime: false        // 👈 VERY IMPORTANT
+      role: "STUDENT",
+      token,
+      firstTime: false
     });
 
   } catch (error) {
@@ -80,9 +92,11 @@ export const loginStudent = async (req, res) => {
 
 
 
+
+
 export const setPassword = async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
+    const { regNumber, newPassword } = req.body;
 
     const student = await Student.findOne({ email });
 
@@ -224,5 +238,128 @@ export const getStudentsByClass = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+export const getStudentAttendance = async (req, res) => {
+  try {
+
+    const studentId = req.user.id;
+
+    // Student details
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({
+        message: "Student not found"
+      });
+    }
+
+    // Attendance fetch
+    const records = await Attendance.find({
+      department: student.department,
+      semester: student.semester,
+      "students.regNumber": student.regNumber
+    }).populate("subject");
+
+    const attendanceMap = {};
+
+    records.forEach((record) => {
+
+      const subjectName =
+        record.subject.subjectName;
+
+      if (!attendanceMap[subjectName]) {
+
+        attendanceMap[subjectName] = {
+          total: 0,
+          present: 0
+        };
+      }
+
+      attendanceMap[subjectName].total++;
+
+      // find current student attendance
+      const studentData =
+        record.students.find(
+          (s) =>
+            s.regNumber === student.regNumber
+        );
+
+      if (
+        studentData &&
+        studentData.status === "Present"
+      ) {
+        attendanceMap[subjectName].present++;
+      }
+    });
+
+    const result = Object.keys(attendanceMap)
+      .map((subject) => {
+
+        const total =
+          attendanceMap[subject].total;
+
+        const present =
+          attendanceMap[subject].present;
+
+        return {
+          subject,
+          totalClasses: total,
+          presentClasses: present,
+          percentage:
+            ((present / total) * 100).toFixed(2)
+        };
+      });
+
+    res.json({
+      attendance: result
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Failed to fetch attendance"
+    });
+  }
+};
+
+
+export const getStudentAttendanceBySubject = async (req, res) => {
+
+  try {
+
+    const regNumber = req.user.regNumber;
+    const { subjectId } = req.params;
+
+    const attendanceRecords = await Attendance.find({
+      subject: subjectId,
+    }).populate("faculty", "name");
+
+    const result = attendanceRecords.map((record) => {
+
+      const foundStudent = record.students.find(
+        (s) => s.regNumber === regNumber
+      );
+
+      return {
+        date: record.date,
+        status: foundStudent?.status || "Absent",
+        faculty: record.faculty.name,
+      };
+    });
+
+    res.json(result);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+
   }
 };

@@ -53,24 +53,32 @@ function MarkAttendance() {
 
   // ✅ Submit attendance
   const handleSubmit = async () => {
-    try {
-      const studentsData = students.map(s => ({
-        studentId: s._id,
-        status: attendance[s._id]
-      }));
+  try {
 
-      await markAttendance({
-        subject: form.subject,
-        department: form.department,
-        semester: form.semester,
-        students: studentsData
-      });
+    const studentsData = students.map((s) => ({
+      studentId: s._id,
 
-      alert("Attendance marked successfully ✅");
-    } catch (err) {
-      alert(err.response?.data?.message || "Error");
-    }
-  };
+      regNumber: s.regNumber,
+
+      name: s.name,
+
+      status: attendance[s._id]
+    }));
+
+    await markAttendance({
+      subject: form.subject,
+      department: form.department,
+      semester: form.semester,
+      students: studentsData
+    });
+
+    alert("Attendance marked successfully ✅");
+
+  } catch (err) {
+
+    alert(err.response?.data?.message || "Error");
+  }
+};
 
   return (
     <div className="p-6">

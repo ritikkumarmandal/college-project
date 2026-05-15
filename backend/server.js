@@ -6,6 +6,8 @@ import studentRoutes from './routes/student.routes.js';
 import  facultyroutes from "./routes/faculty.routes.js";
 import  subjectRoutes from "./routes/subject.routes.js";
 import classAssignRoutes from "./routes/classAssign.routes.js";
+import report from "./routes/report.routes.js";
+import attendence from "./routes/attendance.routes.js";
 import cors from 'cors';
 dotenv.config();
 
@@ -21,11 +23,15 @@ app.use(cors({
 connectDB();
 
 // simple route
+app.use('/api/report',report);
+app.use('/api',attendence);
+app.use('/api/subjects', subjectRoutes);
 app.use('/api',facultyroutes );
 app.use('/api/students', studentRoutes);
 app.use('/api', userRoutes);
-app.use('/api', subjectRoutes);
+//app.use('/api/subjects', subjectRoutes);
 app.use('/api',classAssignRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;

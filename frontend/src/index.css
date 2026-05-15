@@ -8,3 +8,66 @@ body {
   margin: 0;
   padding: 0;
 }
+
+
+
+/* Tile */
+
+
+
+/* REMOVE DEFAULT ACTIVE */
+
+
+
+.present-date {
+  background: #7ce3a1 !important;
+  color: black !important;
+  border-radius: 9999px;
+  font-weight: bold;
+}
+
+.absent-date {
+  background: #f5a3a3 !important;
+  color: red !important;
+  border-radius: 9999px;
+  font-weight: bold;
+}
+
+
+/* index.css */
+
+.present-date abbr {
+  background: #22c55e !important;
+  color: white !important;
+  border-radius: 50%;
+  padding: 8px;
+}
+
+.absent-date abbr {
+  background: #ef4444 !important;
+  color: white !important;
+  border-radius: 50%;
+  padding: 8px;
+}
+
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: sans-serif;
+}
+
+.react-calendar__tile {
+  padding: 18px 10px !important;
+  font-weight: 600;
+}
+
+.react-calendar__tile--active {
+  background: #2563eb !important;
+  color: white !important;
+  border-radius: 12px;
+}
+
+.react-calendar__navigation button {
+  font-size: 18px;
+  font-weight: bold;
+}

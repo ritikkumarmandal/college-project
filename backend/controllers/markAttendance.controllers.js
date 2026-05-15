@@ -1,60 +1,8 @@
+
 import mongoose from "mongoose";
+
 import Attendance from "../models/Attendance.models.js";
-
-export const markAttendance = async (req, res) => {
-  try {
-    const { subject, department, semester, students } = req.body;
-
-    if (!subject || !department || !semester || !students) {
-      return res.status(400).json({
-        message: "All fields required"
-      });
-    }
-
-    // today date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // prevent duplicate
-    const alreadyMarked = await Attendance.findOne({
-      subject,
-      department,
-      semester,
-      date: today
-    });
-
-    if (alreadyMarked) {
-      return res.status(400).json({
-        message: "Attendance already marked today"
-      });
-    }
-
-    // ✅ VERY IMPORTANT TRANSFORMATION
-    const formattedStudents = students.map(s => ({
-      student: s.studentId || s.student || s._id,
-      status: s.status
-    }));
-
-    const attendance = await Attendance.create({
-      faculty: req.user.id,
-      subject,
-      department,
-      semester,
-      date: today,
-      students: formattedStudents
-    });
-
-    res.status(201).json({
-      success: true,
-      attendance
-    });
-
-  } catch (error) {
-    console.log("ATTENDANCE ERROR:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
+import Student from "../models/Student.models.js";
 
 
 export const getAttendanceReport = async (req, res) => {
@@ -135,5 +83,159 @@ export const getAttendanceReport = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+
+export const markAttendance = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const {
+      subject,
+      department,
+      semester,
+      students,
+    } = req.body;
+
+    if (
+      !subject ||
+      !department ||
+      !semester ||
+      !students
+    ) {
+
+      return res.status(400).json({
+        message:
+          "All fields required",
+      });
+
+    }
+
+    // Today Date
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    // Duplicate Check
+    const alreadyMarked =
+      await Attendance.findOne({
+
+        subject,
+        department,
+        semester,
+        date: today,
+
+      });
+
+    if (alreadyMarked) {
+
+      return res.status(400).json({
+        message:
+          "Attendance already marked today",
+      });
+
+    }
+
+    // Student IDs
+    const studentIds =
+      students.map(
+        (s) =>
+          s.studentId ||
+          s.student ||
+          s._id
+      );
+
+    // Fetch Valid Students
+    const validStudents =
+      await Student.find({
+
+        _id: {
+          $in: studentIds,
+        },
+
+        semester: Number(
+          semester
+        ),
+
+        department:
+          department,
+
+      });
+
+    // Validation
+    if (
+      validStudents.length !==
+      studentIds.length
+    ) {
+
+      return res.status(400).json({
+        message:
+          "Some students do not belong to selected semester or department",
+      });
+
+    }
+
+    // Format Students
+    const formattedStudents =
+      students.map((s) => ({
+
+        student:
+          s.studentId ||
+          s.student ||
+          s._id,
+
+        regNumber:
+          s.regNumber,
+
+        name: s.name,
+
+        status: s.status,
+
+      }));
+
+    // Create Attendance
+    const attendance =
+      await Attendance.create({
+
+        faculty:
+          req.user.id,
+
+        subject,
+
+        department,
+
+        semester,
+
+        date: today,
+
+        students:
+          formattedStudents,
+
+      });
+
+    res.status(201).json({
+
+      success: true,
+
+      attendance,
+
+    });
+
+  } catch (error) {
+
+    console.log(
+      "ATTENDANCE ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message:
+        error.message,
+    });
+
   }
 };
