@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api= axios.create({
-    baseURL:'http://localhost:3008/api',
+    baseURL:'https://college-project-tlmg.onrender.com/api',
     withCredentials:true, // Allow cookies to be sent with requests
 });
 api.interceptors.request.use((config) => {
