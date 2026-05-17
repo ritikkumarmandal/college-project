@@ -169,7 +169,9 @@ export const uploadStudents = async (req, res) => {
     }
 
     // 📌 READ FILE FROM DISK (IMPORTANT FIX)
-    const workbook = XLSX.readFile(req.file.path);
+    const workbook = XLSX.read(req.file.buffer, {
+  type: "buffer",
+});
 
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
