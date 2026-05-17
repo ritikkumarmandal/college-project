@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Attendance from "../models/Attendance.models.js";
 import ClassAssign from "../models/classAssign.models.js";
+import fs from "fs";
 
 
 export const createStudent = async (req,res)=>{
@@ -157,21 +158,24 @@ export const getStudentsBySemester = async (req, res) => {
   }
 };
 
+
+
+
+
 export const uploadStudents = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "File required" });
     }
 
-    // Read excel buffer
-    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    // 📌 READ FILE FROM DISK (IMPORTANT FIX)
+    const workbook = XLSX.readFile(req.file.path);
 
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
     const data = XLSX.utils.sheet_to_json(sheet);
 
-    // ✅ Mandatory fields
     const requiredFields = [
       "name",
       "regNumber",
@@ -180,7 +184,6 @@ export const uploadStudents = async (req, res) => {
       "department",
     ];
 
-    // check columns exist
     const fileColumns = Object.keys(data[0] || {});
 
     const missingFields = requiredFields.filter(
@@ -193,20 +196,13 @@ export const uploadStudents = async (req, res) => {
       });
     }
 
-    // ✅ Save students
-    const students = [];
-
-    for (const row of data) {
-      const student = new Student({
-        name: row.name,
-        email: row.email,
-        regNumber: row.regNumber,
-        semester: row.semester,
-        department: row.department || ""
-      });
-
-      students.push(student);
-    }
+    const students = data.map(row => ({
+      name: row.name,
+      email: row.email,
+      regNumber: row.regNumber,
+      semester: row.semester,
+      department: row.department || ""
+    }));
 
     await Student.insertMany(students);
 
@@ -216,6 +212,7 @@ export const uploadStudents = async (req, res) => {
     });
 
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
