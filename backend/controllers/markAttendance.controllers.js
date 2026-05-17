@@ -87,10 +87,9 @@ export const getAttendanceReport = async (req, res) => {
 };
 
 
-/*export const markAttendance = async (
-  req,
-  res
-) => {
+  
+
+export const markAttendance = async (req, res) => {
 
   try {
 
@@ -109,77 +108,22 @@ export const getAttendanceReport = async (req, res) => {
     ) {
 
       return res.status(400).json({
-        message:
-          "All fields required",
+        message: "All fields required",
       });
 
     }
 
-    // Today Date
+    // TODAY DATE
     const today = new Date();
 
-    today.setHours(0, 0, 0, 0);
+    today.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
-    // Duplicate Check
-    const alreadyMarked =
-      await Attendance.findOne({
-
-        subject,
-        department,
-        semester,
-        date: today,
-
-      });
-
-    if (alreadyMarked) {
-
-      return res.status(400).json({
-        message:
-          "Attendance already marked today",
-      });
-
-    }
-
-    // Student IDs
-    const studentIds =
-      students.map(
-        (s) =>
-          s.studentId ||
-          s.student ||
-          s._id
-      );
-
-    // Fetch Valid Students
-    const validStudents =
-      await Student.find({
-
-        _id: {
-          $in: studentIds,
-        },
-
-        semester: Number(
-          semester
-        ),
-
-        department:
-          department,
-
-      });
-
-    // Validation
-    if (
-      validStudents.length !==
-      studentIds.length
-    ) {
-
-      return res.status(400).json({
-        message:
-          "Some students do not belong to selected semester or department",
-      });
-
-    }
-
-    // Format Students
+    // FORMAT STUDENTS
     const formattedStudents =
       students.map((s) => ({
 
@@ -191,58 +135,126 @@ export const getAttendanceReport = async (req, res) => {
         regNumber:
           s.regNumber,
 
-        name: s.name,
+        name:
+          s.name,
 
-        status: s.status,
+        status:
+          s.status,
 
       }));
 
-    // Create Attendance
-  const attendanceData = {
 
-  subject,
+    // DUPLICATE CHECK
+    const alreadyMarked =
+      await Attendance.findOne({
 
-  department,
+        subject,
 
-  semester,
+        department,
 
-  date: today,
+        semester,
 
-  students:
-    formattedStudents,
+        date: today,
 
-};
+      });
 
-if (
-  req.user.role ===
-  "FACULTY"
-) {
 
-  attendanceData.faculty =
-    req.user.id;
+    // ✅ UPDATE EXISTING ATTENDANCE
+    if (alreadyMarked) {
 
-  attendanceData.markedByRole =
-    "FACULTY";
+      alreadyMarked.students =
+        formattedStudents;
 
-}
+      await alreadyMarked.save();
 
-else if (
-  req.user.role ===
-  "HOD"
-) {
+      return res.status(200).json({
 
-  attendanceData.hod =
-    req.user.id;
+        success: true,
 
-  attendanceData.markedByRole =
-    "HOD";
+        message:
+          "Attendance updated successfully",
 
-}
+        attendance:
+          alreadyMarked,
 
-const attendance =
-  await Attendance.create(
-    attendanceData
-  );
+      });
+
+    }
+
+    // STUDENT IDS
+    const studentIds =
+      students.map(
+        (s) =>
+
+          s.studentId ||
+
+          s.student ||
+
+          s._id
+      );
+
+    // VALIDATE STUDENTS
+    const validStudents =
+      await Student.find({
+
+        _id: {
+          $in: studentIds,
+        },
+
+        semester:
+          Number(
+            semester
+          ),
+
+        department:
+          department,
+
+      });
+
+    if (
+
+      validStudents.length !==
+      studentIds.length
+
+    ) {
+
+      return res.status(400).json({
+
+        message:
+          "Some students do not belong to selected semester or department",
+
+      });
+
+    }
+
+    // CREATE ATTENDANCE
+    const attendance =
+      await Attendance.create({
+
+        markedBy:
+          req.user.id,
+
+        markedByRole:
+
+          req.user.role ===
+          "FACULTY"
+
+            ? "Faculty"
+
+            : "Hod",
+
+        subject,
+
+        department,
+
+        semester,
+
+        date: today,
+
+        students:
+          formattedStudents,
+
+      });
 
     res.status(201).json({
 
@@ -260,198 +272,12 @@ const attendance =
     );
 
     res.status(500).json({
+
       message:
         error.message,
+
     });
 
   }
-};*/
-
-
-export const markAttendance =
-  async (req, res) => {
-
-    try {
-
-      const {
-        subject,
-        department,
-        semester,
-        students,
-      } = req.body;
-
-      if (
-        !subject ||
-        !department ||
-        !semester ||
-        !students
-      ) {
-
-        return res.status(400).json({
-
-          message:
-            "All fields required",
-
-        });
-
-      }
-
-      // TODAY DATE
-      const today =
-        new Date();
-
-      today.setHours(
-        0,
-        0,
-        0,
-        0
-      );
-
-      // DUPLICATE CHECK
-      const alreadyMarked =
-        await Attendance.findOne({
-
-          subject,
-
-          department,
-
-          semester,
-
-          date: today,
-
-        });
-
-      if (alreadyMarked) {
-
-        return res.status(400).json({
-
-          message:
-            "Attendance already marked today",
-
-        });
-
-      }
-
-      // STUDENT IDS
-      const studentIds =
-        students.map(
-          (s) =>
-
-            s.studentId ||
-
-            s.student ||
-
-            s._id
-        );
-
-      // VALIDATE STUDENTS
-      const validStudents =
-        await Student.find({
-
-          _id: {
-            $in: studentIds,
-          },
-
-          semester:
-            Number(
-              semester
-            ),
-
-          department:
-            department,
-
-        });
-
-      if (
-
-        validStudents.length !==
-        studentIds.length
-
-      ) {
-
-        return res.status(400).json({
-
-          message:
-            "Some students do not belong to selected semester or department",
-
-        });
-
-      }
-
-      // FORMAT STUDENTS
-      const formattedStudents =
-        students.map((s) => ({
-
-          student:
-
-            s.studentId ||
-
-            s.student ||
-
-            s._id,
-
-          regNumber:
-            s.regNumber,
-
-          name:
-            s.name,
-
-          status:
-            s.status,
-
-        }));
-
-      // CREATE ATTENDANCE
-      const attendance =
-        await Attendance.create({
-
-          markedBy:
-            req.user.id,
-
-          markedByRole:
-
-            req.user.role ===
-            "FACULTY"
-
-              ? "Faculty"
-
-              : "Hod",
-
-          subject,
-
-          department,
-
-          semester,
-
-          date: today,
-
-          students:
-            formattedStudents,
-
-        });
-
-      res.status(201).json({
-
-        success: true,
-
-        attendance,
-
-      });
-
-    } catch (error) {
-
-      console.log(
-        "ATTENDANCE ERROR:",
-        error
-      );
-
-      res.status(500).json({
-
-        message:
-          error.message,
-
-      });
-
-    }
 
 };
