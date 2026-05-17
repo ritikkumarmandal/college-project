@@ -206,7 +206,20 @@ export const uploadStudents = async (req, res) => {
       department: row.department || ""
     }));
 
-    await Student.insertMany(students);
+
+const existingStudents = await Student.find({
+  email: { $in: students.map(s => s.email) }
+});
+
+const existingEmails = existingStudents.map(s => s.email);
+
+const newStudents = students.filter(
+  s => !existingEmails.includes(s.email)
+);
+
+if (newStudents.length > 0) {
+  await Student.insertMany(newStudents);
+}
 
     res.status(201).json({
       message: "Students uploaded successfully",
