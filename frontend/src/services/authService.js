@@ -1,3 +1,4 @@
+import axios from "axios";
 import api from "../api"; 
 
 // Register API
@@ -96,9 +97,14 @@ export const getStudentSubjects = () =>
 export const getStudentAttendance = () =>
   api.get("/students/showattendence");
 
-export const getStudentCalendarAttendance =()=>  api.get(
-   `/student/calendar/${subjectId}`
-);
+export const StudentCalendarAttendance =
+async (subjectId) => {
+
+  return api.get(
+    `/students/calendar/${subjectId}`
+  );
+
+};
 
 export const getAttendanceDates =
   (subjectId) =>
@@ -127,18 +133,35 @@ export const downloadReport = (
   );
 
 
-  export const updateAttendance =
-  async (
-    attendanceId,
-    students
-  ) => {
-
-    return axios.put(
-
-      `${API}/update/${attendanceId}`,
-
-      { students }
-
-    );
-
+ export const updateAttendance = (attendanceId, students) => {
+  return api.put(`/update/${attendanceId}`, { students });
 };
+
+
+export const getProfile = () =>
+  api.get("/seeprofile");
+
+export const updateProfile = (
+  data
+) =>
+  api.put(
+    "/editprofile",
+    data
+  );
+
+
+
+export const changePassword = (
+  data
+) =>
+  api.put(
+    "/change-password",
+    data
+  );
+
+
+  export const searchStudentAttendance =
+  (regNumber) =>
+    api.get(
+      `/search-attendance/${regNumber}`
+    );

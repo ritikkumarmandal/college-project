@@ -1,146 +1,421 @@
-import { useEffect, useState } from "react";
 import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+
   getSubjects,
+
   getAllFaculty,
-  assignClass
+
+  assignClass,
+
 } from "../services/authService";
 
 function AssignClass() {
 
-  const [department, setDepartment] = useState("");
-  const [semester, setSemester] = useState("");
-  const [subjects, setSubjects] = useState([]);
-  const [facultyList, setFacultyList] = useState([]);
+  const [department,
+    setDepartment] =
+    useState("");
 
-  const [subject, setSubject] = useState("");
-  const [faculty, setFaculty] = useState("");
+  const [semester,
+    setSemester] =
+    useState("");
 
-  const departments = ["CSE", "ECE", "EE", "ME", "CE"];
+  const [subjects,
+    setSubjects] =
+    useState([]);
 
-  // Load subjects + faculty
+  const [facultyList,
+    setFacultyList] =
+    useState([]);
+
+  const [subject,
+    setSubject] =
+    useState("");
+
+  const [faculty,
+    setFaculty] =
+    useState("");
+
+  // NEW
+  const [assignType,
+    setAssignType] =
+    useState("Faculty");
+
+  const departments = [
+
+    "CSE",
+
+    "ECE",
+
+    "EE",
+
+    "ME",
+
+    "CE",
+
+  ];
+
+  // =========================
+  // LOAD DATA
+  // =========================
+
   useEffect(() => {
-    if (!department || !semester) return;
+
+    if (
+      !department ||
+      !semester
+    ) return;
 
     loadData();
-  }, [department, semester]);
 
-  const loadData = async () => {
-    try {
-      const subRes = await getSubjects(department, semester);
-      setSubjects(subRes.data.subjects);
+  }, [
+    department,
+    semester,
+  ]);
 
-      /*const facRes = await getAllFaculty();
-      const filtered = facRes.data.faculty.filter(
-        f => f.department === department
-      );*/
-      const facRes = await getAllFaculty();
+  const loadData =
+    async () => {
 
-const filtered = facRes.faculty.filter(
-  f => f.department === department
+      try {
+
+        // SUBJECTS
+        const subRes =
+          await getSubjects(
+
+            department,
+
+            semester
+
+          );
+
+        setSubjects(
+          subRes.data.subjects
+        );
+
+        // FACULTY
+     const facRes =
+  await getAllFaculty();
+
+console.log(
+  "FACULTY:",
+  facRes
 );
 
-      setFacultyList(filtered);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+const facultyData =
+  facRes.faculty || [];
 
-  const handleAssign = async () => {
-    if (!subject || !faculty) {
-      return alert("Select subject & faculty");
-    }
+const filtered =
+  facultyData.filter(
+    (f) =>
 
-    try {
-      await assignClass({
-        department,
-        semester,
-        subject,
-        faculty,
-      });
+      f.department
+        .trim()
+        .toLowerCase() ===
 
-      alert("Class Assigned ✅");
+      department
+        .trim()
+        .toLowerCase()
 
-      setSubject("");
-      setFaculty("");
-    } catch (err) {
-      console.error(err);
-      alert("Assignment failed");
-    }
-  };
+  );
+
+console.log(
+  "FILTERED:",
+  filtered
+);
+
+setFacultyList(filtered);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+  // =========================
+  // ASSIGN
+  // =========================
+
+  const handleAssign =
+    async () => {
+
+      if (!subject) {
+
+        return alert(
+          "Select Subject"
+        );
+
+      }
+
+      // Faculty required
+      if (
+        assignType ===
+          "Faculty" &&
+        !faculty
+      ) {
+
+        return alert(
+          "Select Faculty"
+        );
+
+      }
+
+      try {
+
+        const payload = {
+
+          department,
+
+          semester,
+
+          subject,
+
+          assignedRole:
+            assignType,
+
+        };
+
+        // Faculty assign
+        if (
+          assignType ===
+          "Faculty"
+        ) {
+
+          payload.faculty =
+            faculty;
+
+        }
+
+        await assignClass(
+          payload
+        );
+
+        alert(
+          "Class Assigned ✅"
+        );
+
+        setSubject("");
+
+        setFaculty("");
+
+      } catch (err) {
+
+        console.log(err);
+
+        alert(
+          err.response?.data
+            ?.message ||
+          "Assignment Failed"
+        );
+
+      }
+
+    };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow max-w-xl">
 
-      <h2 className="text-xl font-semibold mb-6">
+    <div className="bg-white p-6 rounded-2xl shadow-xl max-w-2xl">
+
+      <h2 className="text-2xl font-bold mb-6">
+
         Assign Class
+
       </h2>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
 
-        {/* Department */}
+        {/* DEPARTMENT */}
+
         <select
           value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          className="w-full border p-3 rounded"
+          onChange={(e) =>
+            setDepartment(
+              e.target.value
+            )
+          }
+          className="w-full border p-3 rounded-xl"
         >
-          <option value="">Select Department</option>
-          {departments.map(dep => (
-            <option key={dep}>{dep}</option>
-          ))}
+
+          <option value="">
+
+            Select Department
+
+          </option>
+
+          {departments.map(
+            (dep) => (
+
+              <option
+                key={dep}
+              >
+
+                {dep}
+
+              </option>
+
+            )
+          )}
+
         </select>
 
-        {/* Semester */}
+        {/* SEMESTER */}
+
         <select
           value={semester}
-          onChange={(e) => setSemester(e.target.value)}
-          className="w-full border p-3 rounded"
+          onChange={(e) =>
+            setSemester(
+              e.target.value
+            )
+          }
+          className="w-full border p-3 rounded-xl"
         >
-          <option value="">Select Semester</option>
-          {[1,2,3,4,5,6,7,8].map(sem => (
-            <option key={sem} value={sem}>
-              Semester {sem}
-            </option>
-          ))}
+
+          <option value="">
+
+            Select Semester
+
+          </option>
+
+          {[1,2,3,4,5,6,7,8]
+            .map((sem) => (
+
+              <option
+                key={sem}
+                value={sem}
+              >
+
+                Semester {sem}
+
+              </option>
+
+            ))}
+
         </select>
 
-        {/* Subject */}
+        {/* SUBJECT */}
+
         <select
           value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          className="w-full border p-3 rounded"
+          onChange={(e) =>
+            setSubject(
+              e.target.value
+            )
+          }
+          className="w-full border p-3 rounded-xl"
         >
-          <option value="">Select Subject</option>
-          {subjects.map(s => (
-            <option key={s._id} value={s._id}>
-              {s.subjectName}
-            </option>
-          ))}
+
+          <option value="">
+
+            Select Subject
+
+          </option>
+
+          {subjects.map(
+            (s) => (
+
+              <option
+                key={s._id}
+                value={s._id}
+              >
+
+                {s.subjectName}
+
+              </option>
+
+            )
+          )}
+
         </select>
 
-        {/* Faculty */}
+        {/* ASSIGN TYPE */}
+
         <select
-          value={faculty}
-          onChange={(e) => setFaculty(e.target.value)}
-          className="w-full border p-3 rounded"
+          value={assignType}
+          onChange={(e) =>
+            setAssignType(
+              e.target.value
+            )
+          }
+          className="w-full border p-3 rounded-xl"
         >
-          <option value="">Select Faculty</option>
-          {facultyList.map(f => (
-            <option key={f._id} value={f._id}>
-              {f.name}
-            </option>
-          ))}
+
+          <option value="Faculty">
+
+            Assign To Faculty
+
+          </option>
+
+          <option value="Hod">
+
+            Assign To Myself (HOD)
+
+          </option>
+
         </select>
+
+        {/* FACULTY */}
+
+        {assignType ===
+          "Faculty" && (
+
+          <select
+            value={faculty}
+            onChange={(e) =>
+              setFaculty(
+                e.target.value
+              )
+            }
+            className="w-full border p-3 rounded-xl"
+          >
+
+            <option value="">
+
+              Select Faculty
+
+            </option>
+
+            {facultyList.map(
+              (f) => (
+
+                <option
+                  key={f._id}
+                  value={f._id}
+                >
+
+                  {f.name}
+
+                </option>
+
+              )
+            )}
+
+          </select>
+
+        )}
+
+        {/* BUTTON */}
 
         <button
-          onClick={handleAssign}
-          className="w-full bg-green-600 text-white p-3 rounded hover:bg-green-700"
+          onClick={
+            handleAssign
+          }
+          className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-bold transition"
         >
+
           Assign Class
+
         </button>
 
       </div>
+
     </div>
+
   );
+
 }
 
 export default AssignClass;

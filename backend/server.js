@@ -8,6 +8,7 @@ import  subjectRoutes from "./routes/subject.routes.js";
 import classAssignRoutes from "./routes/classAssign.routes.js";
 import report from "./routes/report.routes.js";
 import attendence from "./routes/attendance.routes.js";
+import profile from "./routes/profile.routes.js";
 import cors from 'cors';
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(cors({
 connectDB();
 
 // simple route
+app.use('/api', profile);
 app.use('/api/report',report);
 app.use('/api',attendence);
 app.use('/api/subjects', subjectRoutes);

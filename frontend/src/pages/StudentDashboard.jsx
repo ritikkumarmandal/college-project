@@ -1,129 +1,60 @@
-/*import { useState } from "react";
-import ShowSubjects from "../components/ShowSubjects";
-import StudentAttendance from "../components/ShowAttendance";
-import StudentAttendanceCalendar from "../components/StudentAttendanceCalendar";
 
-// 👉 tum ye components baad me banaoge
-
-
-const WelcomeBanner = () => (
-  <div className="bg-white p-6 rounded-xl shadow mb-6">
-    <h2 className="text-xl font-semibold">
-      Welcome Student 👋
-    </h2>
-    <p className="text-gray-500 mt-2">
-      Select an option from the sidebar.
-    </p>
-  </div>
-);
-
-function StudentDashboard() {
-
-  const [activePage, setActivePage] = useState("home");
-
-  // active button style
-  const menuClass = (page) =>
-    `w-full text-left p-3 rounded-lg transition-all duration-200
-     ${
-       activePage === page
-         ? "bg-blue-500 text-white"
-         : "hover:bg-green-500 hover:text-white"
-     }`;
-
-  // Right content switch
-  const renderContent = () => {
-    switch (activePage) {
-
-      case "subjects":
-        return <ShowSubjects />;
-
-      case "attendance":
-        return <StudentAttendance />;
-
-      case "profile":
-        return <StudentAttendanceCalendar />;
-
-      default:
-        return (
-          <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-gray-500">
-              Please select an option from sidebar.
-            </p>
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div className="flex min-h-screen">
-
-      {/* SIDEBAR }
-      <div className="w-64 bg-white shadow-lg p-6">
-
-        <h1 className="text-2xl font-bold text-green-600 mb-8">
-          Student Dashboard
-        </h1>
-
-        <div className="space-y-3">
-
-          <button
-            onClick={() => setActivePage("subjects")}
-            className={menuClass("subjects")}
-          >
-            My Subjects
-          </button>
-
-          <button
-            onClick={() => setActivePage("attendance")}
-            className={menuClass("attendance")}
-          >
-            My Attendance
-          </button>
-
-          <button
-            onClick={() => setActivePage("profile")}
-            className={menuClass("profile")}
-          >
-            My Profile
-          </button>
-
-        </div>
-      </div>
-
-      {/* RIGHT CONTENT }
-      <div className="flex-1 bg-gray-100 p-8">
-        <WelcomeBanner />
-        {renderContent()}
-      </div>
-
-    </div>
-  );
-}
-
-export default StudentDashboard;*/
 
 import { useEffect, useState } from "react";
 
 import ShowSubjects from "../components/ShowSubjects";
 import StudentAttendance from "../components/ShowAttendance";
 import StudentAttendanceCalendar from "../components/StudentAttendanceCalendar";
+import Profile  from "../components/Profile";
+
 
 import {
   getStudentSubjects,
 } from "../services/authService";
 
-const WelcomeBanner = () => (
-  <div className="bg-white p-6 rounded-xl shadow mb-6">
+const WelcomeBanner = ({
+  setActivePage,
+}) => (
 
-    <h2 className="text-xl font-semibold">
-      Welcome Student 👋
-    </h2>
+  <div className="bg-white p-6 rounded-xl shadow mb-6 flex items-center justify-between">
 
-    <p className="text-gray-500 mt-2">
-      Select an option from the sidebar.
-    </p>
+    <div>
+
+      <h2 className="text-xl font-semibold">
+        Welcome Faculty 👋
+      </h2>
+
+      <p className="text-gray-500 mt-2">
+        Select an option from the sidebar.
+      </p>
+
+    </div>
+
+    {/* PROFILE BUTTON */}
+
+    <button
+      onClick={() =>
+        setActivePage("profile")
+      }
+      className="flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-xl transition"
+    >
+
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+        alt="profile"
+        className="w-10 h-10 rounded-full"
+      />
+
+      <span className="font-semibold">
+
+        Profile
+
+      </span>
+
+    </button>
 
   </div>
+
 );
 
 function StudentDashboard() {
@@ -185,7 +116,13 @@ const fetchSubjects = async () => {
 
         return <StudentAttendance />;
 
-      case "profile":
+         case "profile":
+
+         return <Profile />;
+ 
+
+
+      case "StudentAttendanceCalendar":
 
         return (
 
@@ -286,9 +223,9 @@ const fetchSubjects = async () => {
 
           <button
             onClick={() =>
-              setActivePage("profile")
+              setActivePage("StudentAttendanceCalendar")
             }
-            className={menuClass("profile")}
+            className={menuClass("StudentAttendanceCalendar")}
           >
             Attendance Calendar
           </button>
@@ -301,7 +238,11 @@ const fetchSubjects = async () => {
 
       <div className="flex-1 bg-gray-100 p-8">
 
-        <WelcomeBanner />
+         <WelcomeBanner
+  setActivePage={
+    setActivePage
+  }
+/> 
 
         {renderContent()}
 

@@ -20,6 +20,11 @@ const hodSchema = new mongoose.Schema({
     required: true,
     unique: true, 
   },
+   profileImage: {
+      type: String,
+      default: "",
+    },
+
   role: {
     type: String,
     default: "HOD",
@@ -28,3 +33,6 @@ const hodSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export default mongoose.model("Hod", hodSchema);
+
+
+

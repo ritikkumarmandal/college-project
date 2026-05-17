@@ -4,7 +4,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 import {
-  getStudentCalendarAttendance,
+  StudentCalendarAttendance,
 } from "../services/authService";
 
 const StudentAttendanceCalendar = ({
@@ -31,7 +31,7 @@ const StudentAttendanceCalendar = ({
     try {
 
       const res =
-        await getStudentCalendarAttendance(
+        await StudentCalendarAttendance(
           subjectId
         );
 
@@ -50,41 +50,62 @@ const StudentAttendanceCalendar = ({
   // Date Color
   const tileClassName = ({ date }) => {
 
-    const formattedDate =
-  new Date(
-    date.getTime() -
-    date.getTimezoneOffset() * 60000
-  )
-    .toISOString()
-    .split("T")[0];
-    
-    const found = attendance.find(
-      (item) =>
-        item.date.split("T")[0] ===
-        formattedDate
-    );
+  const formattedDate =
+    new Date(
+      date.getTime() -
+      date.getTimezoneOffset() *
+        60000
+    )
+      .toISOString()
+      .split("T")[0];
 
-    if (!found) return null;
+  const found = attendance.find(
+    (item) => {
 
-    return found.status === "Present"
-      ? "present-date"
-      : "absent-date";
-  };
+      const itemDate =
+        new Date(item.date)
+          .toISOString()
+          .split("T")[0];
+
+      return itemDate === formattedDate;
+
+    }
+  );
+
+  if (!found) return null;
+
+  return found.status === "Present"
+    ? "present-date"
+    : "absent-date";
+};
 
   // Date Click
   const handleDateClick = (date) => {
 
-    const formattedDate =
-      date.toISOString().split("T")[0];
+  const formattedDate =
+    new Date(
+      date.getTime() -
+      date.getTimezoneOffset() *
+        60000
+    )
+      .toISOString()
+      .split("T")[0];
 
-    const found = attendance.find(
-      (item) =>
-        item.date.split("T")[0] ===
-        formattedDate
-    );
+  const found = attendance.find(
+    (item) => {
 
-    setSelectedData(found);
-  };
+      const itemDate =
+        new Date(item.date)
+          .toISOString()
+          .split("T")[0];
+
+      return itemDate === formattedDate;
+
+    }
+  );
+
+  setSelectedData(found);
+};
 
   return (
     <div className="bg-white p-5 rounded-xl shadow-md">

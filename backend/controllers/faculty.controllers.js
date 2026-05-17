@@ -222,7 +222,7 @@ export const getAllFaculty = async (req, res) => {
 
 
 
-export const getFacultyClasses = async (req, res) => {
+/*export const getFacultyClasses = async (req, res) => {
   try {
 
     // ✅ safety check
@@ -257,6 +257,98 @@ export const getFacultyClasses = async (req, res) => {
       message: error.message
     });
   }
+};*/
+
+
+export const getFacultyClasses =
+  async (req, res) => {
+
+    try {
+
+      // AUTH CHECK
+      if (
+        !req.user ||
+        !req.user.id
+      ) {
+
+        return res.status(401)
+          .json({
+
+            message:
+              "User not authenticated",
+
+          });
+
+      }
+
+      // FACULTY + HOD
+      const classes =
+        await ClassAssign.find({
+
+          $or: [
+
+            {
+              faculty:
+                req.user.id,
+            },
+
+            {
+              hod:
+                req.user.id,
+            },
+
+          ],
+
+        })
+
+          .populate(
+            "subject",
+            "subjectName subjectCode"
+          )
+
+          .populate(
+            "faculty",
+            "name department"
+          )
+
+          .populate(
+            "hod",
+            "name department"
+          )
+
+          .lean();
+
+      // REMOVE INVALID
+      const validClasses =
+        classes.filter(
+          (c) =>
+            c.subject !== null
+        );
+
+      res.status(200).json({
+
+        success: true,
+
+        validClasses,
+
+      });
+
+    } catch (error) {
+
+      console.error(
+        "ERROR =>",
+        error
+      );
+
+      res.status(500).json({
+
+        message:
+          error.message,
+
+      });
+
+    }
+
 };
 
 
@@ -324,11 +416,14 @@ export const getAttendanceDates =
 };
 
 
+
+
+
 // ==========================================
 // GET ATTENDANCE BY DATE
 // ==========================================
 
-export const getAttendanceByDate =
+/*export const getAttendanceByDate =
   async (req, res) => {
 
     try {
@@ -394,4 +489,73 @@ export const getAttendanceByDate =
       });
 
     }
+};*/
+
+
+export const getAttendanceByDate = async (req, res) => {
+  try {
+    const { subjectId, date } = req.params;
+
+    // ✅ validation
+    if (!subjectId || !date) {
+      return res.status(400).json({
+        message: "subjectId and date are required",
+      });
+    }
+
+    // ✅ safe date parsing
+    const parsedDate = new Date(date);
+
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        message: "Invalid date format",
+      });
+    }
+
+    // 🔥 IMPORTANT: normalize using UTC (fixes 404 bug)
+    const startDate = new Date(parsedDate);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const endDate = new Date(parsedDate);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    console.log("Subject:", subjectId);
+    console.log("Start:", startDate);
+    console.log("End:", endDate);
+
+    // ✅ DB query (FAST + RELIABLE)
+    const attendance = await Attendance.findOne({
+      subject: subjectId,
+      date: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
+
+    // ❌ not found
+    if (!attendance) {
+      return res.status(404).json({
+        message: "No attendance found for this date",
+      });
+    }
+
+    // ✅ only present students
+    const presentStudents = attendance.students.filter(
+      (s) => s.status === "Present"
+    );
+
+    // ✅ response
+    return res.json({
+      attendanceId: attendance._id,
+      date: attendance.date,
+      students: presentStudents,
+    });
+
+  } catch (error) {
+    console.error("ERROR:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch attendance",
+    });
+  }
 };

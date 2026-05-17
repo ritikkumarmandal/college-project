@@ -3,6 +3,7 @@ import Student from "../models/Student.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Attendance from "../models/Attendance.models.js";
+import ClassAssign from "../models/classAssign.models.js";
 
 
 export const createStudent = async (req,res)=>{
@@ -243,123 +244,250 @@ export const getStudentsByClass = async (req, res) => {
 
 
 
-export const getStudentAttendance = async (req, res) => {
-  try {
+export const getStudentAttendance =
+  async (req, res) => {
 
-    const studentId = req.user.id;
+    try {
 
-    // Student details
-    const student = await Student.findById(studentId);
+      const studentId =
+        req.user.id;
 
-    if (!student) {
-      return res.status(404).json({
-        message: "Student not found"
-      });
-    }
-
-    // Attendance fetch
-    const records = await Attendance.find({
-      department: student.department,
-      semester: student.semester,
-      "students.regNumber": student.regNumber
-    }).populate("subject");
-
-    const attendanceMap = {};
-
-    records.forEach((record) => {
-
-      const subjectName =
-        record.subject.subjectName;
-
-      if (!attendanceMap[subjectName]) {
-
-        attendanceMap[subjectName] = {
-          total: 0,
-          present: 0
-        };
-      }
-
-      attendanceMap[subjectName].total++;
-
-      // find current student attendance
-      const studentData =
-        record.students.find(
-          (s) =>
-            s.regNumber === student.regNumber
+      // Student Details
+      const student =
+        await Student.findById(
+          studentId
         );
 
-      if (
-        studentData &&
-        studentData.status === "Present"
-      ) {
-        attendanceMap[subjectName].present++;
+      if (!student) {
+
+        return res.status(404).json({
+
+          message:
+            "Student not found"
+
+        });
+
       }
-    });
 
-    const result = Object.keys(attendanceMap)
-      .map((subject) => {
+      // ✅ Only Assigned Subjects
+      const assignedSubjects =
+        await ClassAssign.find({
 
-        const total =
-          attendanceMap[subject].total;
+          department:
+            student.department,
 
-        const present =
-          attendanceMap[subject].present;
+          semester:
+            student.semester,
 
-        return {
-          subject,
-          totalClasses: total,
-          presentClasses: present,
-          percentage:
-            ((present / total) * 100).toFixed(2)
-        };
-      });
+        }).populate(
+          "subject"
+        );
 
-    res.json({
-      attendance: result
-    });
+      // Subject IDs
+      const subjectIds =
+        assignedSubjects.map(
+          (s) => s.subject._id
+        );
 
-  } catch (error) {
+      // Attendance Fetch
+      const records =
+        await Attendance.find({
 
-    console.log(error);
+          department:
+            student.department,
 
-    res.status(500).json({
-      message: "Failed to fetch attendance"
-    });
-  }
-};
+          semester:
+            student.semester,
 
+          subject: {
+            $in: subjectIds
+          },
 
-export const getStudentAttendanceBySubject = async (req, res) => {
+          "students.regNumber":
+            student.regNumber
 
-  try {
+        }).populate(
+          "subject"
+        );
 
-    const regNumber = req.user.regNumber;
-    const { subjectId } = req.params;
+      const attendanceMap = {};
 
-    const attendanceRecords = await Attendance.find({
-      subject: subjectId,
-    }).populate("faculty", "name");
+      records.forEach(
+        (record) => {
 
-    const result = attendanceRecords.map((record) => {
+          if (!record.subject)
+            return;
 
-      const foundStudent = record.students.find(
-        (s) => s.regNumber === regNumber
+          const subjectName =
+            record.subject
+              .subjectName;
+
+          if (
+            !attendanceMap[
+              subjectName
+            ]
+          ) {
+
+            attendanceMap[
+              subjectName
+            ] = {
+
+              total: 0,
+
+              present: 0,
+
+            };
+
+          }
+
+          attendanceMap[
+            subjectName
+          ].total++;
+
+          // Current Student
+          const studentData =
+            record.students.find(
+              (s) =>
+                s.regNumber ===
+                student.regNumber
+            );
+
+          if (
+            studentData &&
+            studentData.status ===
+              "Present"
+          ) {
+
+            attendanceMap[
+              subjectName
+            ].present++;
+
+          }
+
+        }
       );
 
-      return {
-        date: record.date,
-        status: foundStudent?.status || "Absent",
-        faculty: record.faculty.name,
-      };
-    });
+      const result =
+        Object.keys(
+          attendanceMap
+        ).map((subject) => {
 
-    res.json(result);
+          const total =
+            attendanceMap[
+              subject
+            ].total;
 
-  } catch (error) {
+          const present =
+            attendanceMap[
+              subject
+            ].present;
 
-    res.status(500).json({
-      message: error.message,
-    });
+          return {
 
-  }
+            subject,
+
+            totalClasses:
+              total,
+
+            presentClasses:
+              present,
+
+            percentage:
+              (
+                (present /
+                  total) *
+                100
+              ).toFixed(2),
+
+          };
+
+        });
+
+      res.json({
+
+        attendance:
+          result,
+
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+
+        message:
+          "Failed to fetch attendance"
+
+      });
+
+    }
+
+};
+
+export const getStudentAttendanceBySubject =
+  async (req, res) => {
+
+    try {
+
+      const regNumber =
+        req.user.regNumber;
+
+      const { subjectId } =
+        req.params;
+
+      const attendanceRecords =
+        await Attendance.find({
+
+          subject: subjectId,
+
+        }).populate(
+          "markedBy",
+          "name"
+        );
+
+      const result =
+        attendanceRecords.map(
+          (record) => {
+
+            const foundStudent =
+              record.students.find(
+                (s) =>
+                  s.regNumber ===
+                  regNumber
+              );
+
+            return {
+
+              date: record.date,
+
+              status:
+                foundStudent?.status ||
+                "Absent",
+
+              faculty:
+                record.markedBy?.name ||
+                "Unknown",
+
+            };
+
+          }
+        );
+
+      res.json(result);
+
+    } catch (error) {
+
+      console.log(
+        "CALENDAR ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          error.message,
+      });
+
+    }
+
 };

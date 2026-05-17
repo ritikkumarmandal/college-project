@@ -9,71 +9,140 @@ function ShowAttendance() {
   const [attendance, setAttendance] = useState([]);
 
   const fetchAttendance = async () => {
+
     try {
 
-      const res = await getStudentAttendance();
+      const res =
+        await getStudentAttendance();
 
-      setAttendance(res.data.attendance || []);
+      setAttendance(
+        res.data.attendance || []
+      );
 
     } catch (error) {
 
       console.log(error);
 
-      alert("Failed to load attendance");
+      alert(
+        "Failed to load attendance"
+      );
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow">
 
-      <h2 className="text-xl font-semibold mb-6">
-        My Attendance
-      </h2>
+    <div className="p-6">
 
-      <button
-        onClick={fetchAttendance}
-        className="bg-blue-600 text-white px-5 py-2 rounded"
-      >
-        Show Attendance
-      </button>
+      {/* HEADER */}
 
-      <table className="w-full mt-6 border-collapse">
+      <div className="flex items-center justify-between mb-6">
 
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-3">Subject</th>
-            <th className="p-3">Total</th>
-            <th className="p-3">Present</th>
-            <th className="p-3">Percentage</th>
-          </tr>
-        </thead>
+        <h2 className="text-3xl font-bold">
+          My Attendance
+        </h2>
 
-        <tbody>
+        <button
+          onClick={fetchAttendance}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold"
+        >
+          Show Attendance
+        </button>
 
-          {attendance.map((a, index) => (
+      </div>
 
-            <tr key={index} className="border-b">
+      {/* SUBJECT CARDS */}
 
-              <td className="p-3">{a.subject}</td>
+      <div className="space-y-6">
 
-              <td className="p-3">
-                {a.totalClasses}
-              </td>
+        {attendance.map((a, index) => {
 
-              <td className="p-3">
-                {a.presentClasses}
-              </td>
+          const absent =
+            a.totalClasses -
+            a.presentClasses;
 
-              <td className="p-3">
-                {a.percentage}%
-              </td>
+          return (
 
-            </tr>
-          ))}
+            <div
+              key={index}
+              className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm"
+            >
 
-        </tbody>
+              {/* SUBJECT NAME */}
 
-      </table>
+              <h2 className="text-3xl font-bold mb-6 lowercase">
+
+                {a.subject}
+
+              </h2>
+
+              {/* CARDS */}
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+
+                {/* TOTAL */}
+
+                <div className="bg-blue-100 rounded-3xl p-6">
+
+                  <h3 className="text-2xl font-bold">
+                    Total Classes
+                  </h3>
+
+                  <p className="text-5xl mt-3">
+                    {a.totalClasses}
+                  </p>
+
+                </div>
+
+                {/* PRESENT */}
+
+                <div className="bg-green-100 rounded-3xl p-6">
+
+                  <h3 className="text-2xl font-bold">
+                    Present
+                  </h3>
+
+                  <p className="text-5xl mt-3">
+                    {a.presentClasses}
+                  </p>
+
+                </div>
+
+                {/* ABSENT */}
+
+                <div className="bg-red-100 rounded-3xl p-6">
+
+                  <h3 className="text-2xl font-bold">
+                    Absent
+                  </h3>
+
+                  <p className="text-5xl mt-3">
+                    {absent}
+                  </p>
+
+                </div>
+
+                {/* PERCENTAGE */}
+
+                <div className="bg-yellow-100 rounded-3xl p-6">
+
+                  <h3 className="text-2xl font-bold">
+                    Percentage
+                  </h3>
+
+                  <p className="text-5xl mt-3">
+                    {a.percentage}%
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          );
+        })}
+
+      </div>
 
     </div>
   );

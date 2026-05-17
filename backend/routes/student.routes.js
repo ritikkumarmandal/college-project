@@ -19,7 +19,7 @@ router.get(
   getStudentAttendance
 );
 router.get(
-  "/student/calendar/:subjectId",
+  "/calendar/:subjectId",
   authemail,
    getStudentAttendanceBySubject
 );
