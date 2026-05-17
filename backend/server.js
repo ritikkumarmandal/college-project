@@ -16,10 +16,23 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://college-project-flax-alpha.vercel.app'
+];
+
 app.use(cors({
-  origin: ['http://localhost:5173',
-  'https://college-project-flax-alpha.vercel.app'], // Allow requests from this origin
-  credentials: true, // Allow cookies to be sent with requests
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(null, true); // TEMP: allow all for debugging
+    }
+  },
+  credentials: true
 }));
 
 connectDB();
