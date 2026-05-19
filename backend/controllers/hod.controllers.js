@@ -48,6 +48,174 @@ export const registered = async (req, res) => {
   }
 };
 
+
+/*export const registered = async (req, res) => {
+
+  try {
+
+    const {
+      name,
+      email,
+      password,
+      department
+    } = req.body;
+
+    // =========================
+    // ALL FIELDS CHECK
+    // =========================
+
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !department
+    ) {
+
+      return res.status(400).json({
+
+        message:
+          "All fields are required",
+
+      });
+
+    }
+
+    // =========================
+    // HOD EMAIL CHECK
+    // =========================
+
+    if (
+      !email.includes("hod")
+    ) {
+
+      return res.status(400).json({
+
+        message:
+          "Use HOD email (email must contain 'hod')",
+
+      });
+
+    }
+
+    // =========================
+    // EMAIL ALREADY EXISTS
+    // =========================
+
+    const existingEmail =
+      await Hod.findOne({
+        email
+      });
+
+    if (existingEmail) {
+
+      return res.status(400).json({
+
+        message:
+          "Email already registered",
+
+      });
+
+    }
+
+    // =========================
+    // DEPARTMENT HOD CHECK
+    // =========================
+
+    const existingHod =
+      await Hod.findOne({
+
+        department
+
+      });
+
+    if (existingHod) {
+
+      return res.status(400).json({
+
+        message:
+          "This department already has a HOD",
+
+      });
+
+    }
+
+    // =========================
+    // PASSWORD HASH
+    // =========================
+
+    const hashedPassword =
+      await bcrypt.hash(
+        password,
+        10
+      );
+
+    // =========================
+    // CREATE HOD
+    // =========================
+
+    const hod =
+      await Hod.create({
+
+        name,
+
+        email,
+
+        password:
+          hashedPassword,
+
+        department,
+
+        role: "HOD",
+
+      });
+
+    // =========================
+    // RESPONSE
+    // =========================
+
+    res.status(201).json({
+
+      success: true,
+
+      message:
+        "HOD registered successfully",
+
+      hod: {
+
+        id:
+          hod._id,
+
+        name:
+          hod.name,
+
+        email:
+          hod.email,
+
+        department:
+          hod.department,
+
+        role:
+          hod.role,
+
+      },
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message:
+        error.message,
+
+    });
+
+  }
+
+};*/
+
 // login
 
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser,registerFaculty } from "../services/authService";
 
-function Register() {
+/*function Register() {
 
   const navigate = useNavigate();
 
@@ -60,10 +60,10 @@ function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
-      {/* MAIN CARD */}
+      {/* MAIN CARD }
       <div className="w-[900px] h-[540px] bg-white rounded-2xl shadow-xl flex overflow-hidden">
 
-        {/* LEFT SIDE */}
+        {/* LEFT SIDE }
         <div className="w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center relative p-10">
 
          
@@ -79,10 +79,192 @@ function Register() {
           </p>
         </div>
 
-        {/* RIGHT FORM */}
+        {/* RIGHT FORM }
         <div className="w-1/2 flex flex-col justify-center px-12">
 
           <h2 className="text-3xl font-bold text-teal-500 text-center mb-6">
+            CREATE ACCOUNT
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* ROLE SELECT }
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full border-b-2 outline-none py-2 focus:border-teal-500"
+            >
+              <option value="HOD">HOD Register</option>
+              <option value="FACULTY">Faculty Register</option>
+             
+            </select>
+
+            {/* NAME }
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter Name"
+              onChange={handleChange}
+              required
+              className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+            />
+
+            {/* EMAIL}
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter Email"
+              onChange={handleChange}
+              required
+              className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+            />
+
+            {/* MOBILE }
+            <input
+              type="text"
+              name="mobile"
+              placeholder="Mobile Number"
+              onChange={handleChange}
+              required
+              className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+            />
+
+            {/* HOD PASSWORD }
+            {(role === "FACULTY" || role === "STUDENT" || role === "HOD") && (
+              <input
+                type="password"
+                name="password"
+                placeholder="Create Password"
+                onChange={handleChange}
+                required
+                className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+              />
+            )}
+
+            {/* FACULTY + STUDENT DEPARTMENT }
+            {(role === "FACULTY" || role === "STUDENT" || role === "HOD") && (
+              <select
+                name="department"
+                onChange={handleChange}
+                required
+                className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+              >
+                <option value="">Select Department</option>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="ME">ME</option>
+                <option value="CE">CE</option>
+              </select>
+            )}
+
+            {/* STUDENT REG NUMBER }
+            {role === "STUDENT" && (
+              <input
+                type="text"
+                name="regNumber"
+                placeholder="Registration Number"
+                onChange={handleChange}
+                required
+                className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+              />
+            )}
+
+            {/* BUTTON }
+            <button
+              type="submit"
+              className="w-full bg-teal-500 text-white py-3 rounded-full hover:bg-teal-600 transition"
+            >
+              Register
+            </button>
+
+          </form>
+
+          {/* LOGIN LINK }
+          <p className="text-center text-sm mt-5">
+            Already have an account?
+            <span
+              onClick={() => navigate("/login")}
+              className="text-teal-500 font-semibold cursor-pointer ml-1"
+            >
+              Login
+            </span>
+          </p>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Register;*/
+
+
+
+function Register() {
+  const navigate = useNavigate();
+  const [role, setRole] = useState("HOD");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    password: "",
+    department: "",
+    regNumber: ""
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let res;
+
+      if (role === "HOD") {
+        res = await registerUser({ ...formData, role: "HOD" });
+      }
+
+      if (role === "FACULTY") {
+        res = await registerFaculty({ ...formData, role: "FACULTY" });
+      }
+
+      alert("User Registered Successfully");
+      navigate("/login");
+    } catch (error) {
+      console.log(error);
+      alert("Registration Failed");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+
+      {/* MAIN CARD */}
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl flex flex-col lg:flex-row overflow-hidden">
+
+        {/* LEFT SIDE */}
+        <div className="w-full lg:w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center p-6 lg:p-10">
+
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/295/295128.png"
+            alt="register"
+            className="w-32 sm:w-40 md:w-52 lg:w-60"
+          />
+
+          <p className="mt-6 text-xs sm:text-sm tracking-wider text-center">
+            ATTENDANCE MANAGEMENT SYSTEM
+          </p>
+        </div>
+
+        {/* RIGHT FORM */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-8">
+
+          <h2 className="text-2xl sm:text-3xl font-bold text-teal-500 text-center mb-6">
             CREATE ACCOUNT
           </h2>
 
@@ -96,7 +278,7 @@ function Register() {
             >
               <option value="HOD">HOD Register</option>
               <option value="FACULTY">Faculty Register</option>
-             
+              <option value="STUDENT">Student Register</option>
             </select>
 
             {/* NAME */}
@@ -129,42 +311,37 @@ function Register() {
               className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
             />
 
-            {/* HOD PASSWORD */}
-            {(role === "FACULTY" || role === "STUDENT" || role === "HOD") && (
-              <input
-                type="password"
-                name="password"
-                placeholder="Create Password"
-                onChange={handleChange}
-                required
-                className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
-              />
-            )}
+            {/* PASSWORD */}
+            <input
+              type="password"
+              name="password"
+              placeholder="Create Password"
+              onChange={handleChange}
+              required
+              className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+            />
 
-            {/* FACULTY + STUDENT DEPARTMENT */}
-            {(role === "FACULTY" || role === "STUDENT" || role === "HOD") && (
-              <select
-                name="department"
-                onChange={handleChange}
-                required
-                className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
-              >
-                <option value="">Select Department</option>
-                <option value="CSE">CSE</option>
-                <option value="ECE">ECE</option>
-                <option value="ME">ME</option>
-                <option value="CE">CE</option>
-              </select>
-            )}
+            {/* DEPARTMENT */}
+            <select
+              name="department"
+              onChange={handleChange}
+              required
+              className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
+            >
+              <option value="">Select Department</option>
+              <option value="CSE">CSE</option>
+              <option value="ECE">ECE</option>
+              <option value="ME">ME</option>
+              <option value="CE">CE</option>
+            </select>
 
-            {/* STUDENT REG NUMBER */}
+            {/* REG NUMBER (only student) */}
             {role === "STUDENT" && (
               <input
                 type="text"
                 name="regNumber"
                 placeholder="Registration Number"
                 onChange={handleChange}
-                required
                 className="w-full border-b-2 py-2 outline-none focus:border-teal-500"
               />
             )}
