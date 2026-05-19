@@ -83,8 +83,11 @@ export const getAttendanceReport = (department, semester, subjectId) =>
     params: { department, semester, subjectId }
   });
 
-  export const loginStudent = (data) =>
+  export const verifyStudentOTP = (data) =>
   api.post("/students/login", data);
+
+  export const sendStudentOTP = (data) =>
+  api.post("/students/send-otp", data);
 
   export const setStudentPassword = (data) =>
   api.post("/students/set-password", data);

@@ -46,12 +46,12 @@ const attendanceSchema =
 
     date: {
 
-      type: Date,
+  type: Date,
 
-      default:
-        Date.now,
+  default:
+    Date.now,
 
-    },
+},
 
     students: [
 

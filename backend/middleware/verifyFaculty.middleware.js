@@ -37,4 +37,4 @@ export const verifyFaculty = (req, res, next) => {
       message: "Invalid token"
     });
   }
-};
+};     

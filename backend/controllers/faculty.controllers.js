@@ -423,7 +423,7 @@ export const getAttendanceDates =
 // GET ATTENDANCE BY DATE
 // ==========================================
 
-/*export const getAttendanceByDate =
+export const getAttendanceByDate =
   async (req, res) => {
 
     try {
@@ -489,73 +489,6 @@ export const getAttendanceDates =
       });
 
     }
-};*/
-
-
-export const getAttendanceByDate = async (req, res) => {
-  try {
-    const { subjectId, date } = req.params;
-
-    // ✅ validation
-    if (!subjectId || !date) {
-      return res.status(400).json({
-        message: "subjectId and date are required",
-      });
-    }
-
-    // ✅ safe date parsing
-    const parsedDate = new Date(date);
-
-    if (isNaN(parsedDate.getTime())) {
-      return res.status(400).json({
-        message: "Invalid date format",
-      });
-    }
-
-    // 🔥 IMPORTANT: normalize using UTC (fixes 404 bug)
-    const startDate = new Date(parsedDate);
-    startDate.setUTCHours(0, 0, 0, 0);
-
-    const endDate = new Date(parsedDate);
-    endDate.setUTCHours(23, 59, 59, 999);
-
-    console.log("Subject:", subjectId);
-    console.log("Start:", startDate);
-    console.log("End:", endDate);
-
-    // ✅ DB query (FAST + RELIABLE)
-    const attendance = await Attendance.findOne({
-      subject: subjectId,
-      date: {
-        $gte: startDate,
-        $lte: endDate,
-      },
-    });
-
-    // ❌ not found
-    if (!attendance) {
-      return res.status(404).json({
-        message: "No attendance found for this date",
-      });
-    }
-
-    // ✅ only present students
-    const presentStudents = attendance.students.filter(
-      (s) => s.status === "Present"
-    );
-
-    // ✅ response
-    return res.json({
-      attendanceId: attendance._id,
-      date: attendance.date,
-      students: presentStudents,
-    });
-
-  } catch (error) {
-    console.error("ERROR:", error);
-
-    return res.status(500).json({
-      message: "Failed to fetch attendance",
-    });
-  }
 };
+
+

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Attendance from "../models/Attendance.models.js";
 import ClassAssign from "../models/classAssign.models.js";
+import nodemailer from "nodemailer";
 import fs from "fs";
 
 
@@ -43,53 +44,206 @@ error:error.message
 
 
 
-export const loginStudent = async (req, res) => {
-  try {
-    const { email, password } = req.body;
 
+
+// ============================
+// EMAIL TRANSPORTER
+// ============================
+
+
+const transporter = nodemailer.createTransport({
+
+  service: "gmail",
+
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASS,
+  },
+
+});
+
+
+// ============================
+// SEND OTP
+// ============================
+
+export const sendStudentOTP = async (req, res) => {
+
+  try {
+
+    const { email } = req.body;
+
+    if (!email) {
+
+      return res.status(400).json({
+        message: "Email required"
+      });
+
+    }
+
+    // FIND STUDENT
     const student = await Student.findOne({ email });
 
     if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
 
-    // 🔥 First time user
-    if (!student.password) {
-      return res.status(200).json({
-        message: "Please set password first",
-        firstTime: true
+      return res.status(404).json({
+        message: "Student not found"
       });
+
     }
 
-    const isMatch = await bcrypt.compare(password, student.password);
+    // GENERATE OTP
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
 
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid password" });
+    // SAVE OTP
+    student.otp = otp;
+
+    student.otpExpiry =
+      Date.now() + 5 * 60 * 1000;
+
+    await student.save();
+
+    // SEND EMAIL
+    await transporter.sendMail({
+
+      from: process.env.EMAIL,
+
+      to: student.email,
+
+      subject: "Your Login OTP",
+
+      text: `Hello ${student.name},
+
+Your OTP for login is:
+
+${otp}
+
+This OTP will expire in 5 minutes.
+
+Regards
+Attendance Management System`,
+
+    });
+
+    res.status(200).json({
+
+      success: true,
+
+      message: "OTP sent successfully",
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
+};
+
+
+// ============================
+// VERIFY OTP LOGIN
+// ============================
+
+export const verifyStudentOTP = async (req, res) => {
+
+  try {
+
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+
+      return res.status(400).json({
+        message: "Email and OTP required"
+      });
+
     }
 
-    // ✅ 🔥 REAL JWT TOKEN BAN RAHA HAI
+    // FIND STUDENT
+    const student = await Student.findOne({ email });
+
+    if (!student) {
+
+      return res.status(404).json({
+        message: "Student not found"
+      });
+
+    }
+
+    // CHECK OTP
+    if (student.otp !== otp) {
+
+      return res.status(400).json({
+        message: "Invalid OTP"
+      });
+
+    }
+
+    // CHECK EXPIRY
+    if (student.otpExpiry < Date.now()) {
+
+      return res.status(400).json({
+        message: "OTP expired"
+      });
+
+    }
+
+    // EMAIL VERIFIED
+    student.isVerified = true;
+
+    // CLEAR OTP
+    student.otp = null;
+    student.otpExpiry = null;
+
+    await student.save();
+
+    // GENERATE JWT
     const token = jwt.sign(
+
       {
         id: student._id,
         email: student.email,
         regNumber: student.regNumber,
         role: "STUDENT"
       },
-      process.env.JWT_SECRET,   // 🔐 .env me rakho
-      { expiresIn: "1d" }
+
+      process.env.JWT_SECRET,
+
+      {
+        expiresIn: "1d"
+      }
+
     );
 
     res.status(200).json({
+
+      success: true,
+
       message: "Login successful",
-      role: "STUDENT",
+
       token,
-      firstTime: false
+
+      role: "STUDENT",
+
     });
 
   } catch (error) {
+
     console.log(error);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
+
   }
+
 };
 
 

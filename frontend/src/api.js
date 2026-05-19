@@ -1,8 +1,13 @@
 import axios from "axios";
 
 const api= axios.create({
-    baseURL:'https://college-project-tlmg.onrender.com/api',
-    withCredentials:true, // Allow cookies to be sent with requests
+   baseURL:
+    window.location.hostname === "localhost"
+
+      ? "http://localhost:3008/api"
+
+      : "https://college-project-tlmg.onrender.com/api",
+
 });
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");

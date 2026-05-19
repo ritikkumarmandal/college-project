@@ -1,172 +1,360 @@
 import { useState } from "react";
-import { loginHod, loginfaculty ,loginStudent} from "../services/authService";
+import {
+  loginHod,
+  loginfaculty,
+  sendStudentOTP,
+  verifyStudentOTP,
+} from "../services/authService";
+
 import { useNavigate } from "react-router-dom";
 
 function Login() {
 
   const navigate = useNavigate();
 
-  // ================= STATE =================
+  // ================= ROLE =================
   const [roleType, setRoleType] = useState("HOD");
 
+  // ================= FORM =================
   const [formData, setFormData] = useState({
+
     email: "",
-    password: ""
+    password: "",
+    otp: "",
+
   });
 
-  // ================= HANDLE INPUT =================
+  // ================= OTP STATE =================
+  const [otpSent, setOtpSent] = useState(false);
+
+  // ================= INPUT CHANGE =================
   const handleChange = (e) => {
+
     setFormData({
+
       ...formData,
-      [e.target.name]: e.target.value
+
+      [e.target.name]: e.target.value,
+
     });
+
   };
 
-  // ================= LOGIN SUBMIT =================
+  // ================= SEND OTP =================
+  const handleSendOTP = async () => {
+
+    try {
+
+      const res = await sendStudentOTP({
+
+        email: formData.email,
+
+      });
+
+      alert(res.data.message);
+
+      setOtpSent(true);
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to send OTP"
+      );
+
+    }
+
+  };
+
+  // ================= LOGIN =================
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     try {
+
       let res;
 
-      // ✅ Role based API call
+      // ================= HOD LOGIN =================
       if (roleType === "HOD") {
-        res = await loginHod(formData);
-      } else if (roleType === "FACULTY") {
-        res = await loginfaculty(formData);
+
+        res = await loginHod({
+
+          email: formData.email,
+
+          password: formData.password,
+
+        });
+
       }
 
-      else if (roleType === "STUDENT") {
-  res = await loginStudent(formData);
-      
-  
-  // 🔥 First time user check
-  if (res.data.firstTime) {
-    navigate("/set-password", { state: { email: formData.email } });
-    return;
-  }
-}
+      // ================= FACULTY LOGIN =================
+      else if (roleType === "FACULTY") {
 
+        res = await loginfaculty({
+
+          email: formData.email,
+
+          password: formData.password,
+
+        });
+
+      }
+
+      // ================= STUDENT OTP LOGIN =================
+      else if (roleType === "STUDENT") {
+
+        res = await verifyStudentOTP({
+
+          email: formData.email,
+
+          otp: formData.otp,
+
+        });
+
+      }
+
+      // ================= TOKEN =================
       const { token, role } = res.data;
 
-      // ✅ Save auth data
       localStorage.setItem("token", token);
+
       localStorage.setItem("role", role);
 
       alert("Login Successful ✅");
 
-      // ✅ Role based redirect
+      // ================= REDIRECT =================
       if (role === "HOD") {
-        navigate("/hod-dashboard");
-      } else if (role === "FACULTY") {
-        navigate("/faculty-dashboard");
-      }
-         else if (role === "STUDENT") {
-       navigate("/student-dashboard");
 
-} 
-       else {
+        navigate("/hod-dashboard");
+
+      }
+
+      else if (role === "FACULTY") {
+
+        navigate("/faculty-dashboard");
+
+      }
+
+      else if (role === "STUDENT") {
+
+        navigate("/student-dashboard");
+
+      }
+
+      else {
+
         navigate("/");
+
       }
 
     } catch (error) {
+
       console.log(error);
-      alert(error.response?.data?.message || "Login Failed ❌");
+
+      alert(
+
+        error.response?.data?.message ||
+
+        "Login Failed ❌"
+
+      );
+
     }
+
   };
 
   // ================= UI =================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
-      <div className="w-[900px] h-[520px] bg-white rounded-2xl shadow-xl flex overflow-hidden">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
 
-        {/* LEFT SIDE */}
-        <div className="w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center relative p-10">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
 
-          
+        {/* ================= LEFT SIDE ================= */}
+
+        <div className="md:w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center p-8">
+
           <img
             src="https://cdn-icons-png.flaticon.com/512/295/295128.png"
             alt="login"
-            className="w-60"
+            className="w-40 md:w-60"
           />
 
-          <p className="mt-6 text-sm tracking-wider">
-            ATTENDANCE MANAGEMENT SYSTEM
-          </p>
-        </div>
+          <h2 className="text-2xl md:text-3xl font-bold mt-6 text-center">
 
-        {/* RIGHT SIDE FORM */}
-        <div className="w-1/2 flex flex-col justify-center px-12">
+            Attendance Management System
 
-          <h2 className="text-3xl font-bold text-teal-500 text-center mb-6">
-            LOGIN
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="mt-4 text-sm text-center">
 
-            {/* ROLE SELECT */}
-            <select
-              value={roleType}
-              onChange={(e) => setRoleType(e.target.value)}
-              className="w-full border-b-2 outline-none py-2 focus:border-teal-500"
-            >
-              <option value="HOD">HOD</option>
-              <option value="FACULTY">Faculty</option>
-               <option value="STUDENT">Student</option>
-            </select>
+            Smart Attendance & Student Management
 
-            {/* EMAIL */}
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter Email"
-              onChange={handleChange}
-              required
-              className="w-full border-b-2 outline-none py-2 focus:border-teal-500"
-            />
-
-            {/* PASSWORD */}
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter Password"
-              onChange={handleChange}
-              required
-              className="w-full border-b-2 outline-none py-2 focus:border-teal-500"
-            />
-
-            {/* BUTTON */}
-            <button
-              type="submit"
-              className="w-full bg-teal-500 text-white py-3 rounded-full hover:bg-teal-600 transition"
-            >
-              Login
-            </button>
-
-          </form>
-
-          <p className="text-center text-sm mt-5">
-            Don't have an account?
-            <span
-              onClick={() => navigate("/register")}
-              className="text-teal-500 font-semibold cursor-pointer ml-1"
-            >
-              Sign Up
-            </span>
           </p>
 
-          <p
-  onClick={() => navigate("/set-password")}
-  className="text-teal-500 text-sm cursor-pointer mt-2"
->
-  First time user? Set Password
-</p>
+        </div>
+
+        {/* ================= RIGHT SIDE ================= */}
+
+        <div className="md:w-1/2 flex items-center justify-center p-6 md:p-10">
+
+          <div className="w-full">
+
+            <h2 className="text-3xl font-bold text-center text-teal-500 mb-8">
+
+              LOGIN
+
+            </h2>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
+
+              {/* ================= ROLE ================= */}
+
+              <select
+                value={roleType}
+                onChange={(e) => {
+
+                  setRoleType(e.target.value);
+
+                  setOtpSent(false);
+
+                }}
+                className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
+              >
+
+                <option value="HOD">
+
+                  HOD
+
+                </option>
+
+                <option value="FACULTY">
+
+                  Faculty
+
+                </option>
+
+                <option value="STUDENT">
+
+                  Student
+
+                </option>
+
+              </select>
+
+              {/* ================= EMAIL ================= */}
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter Email"
+                onChange={handleChange}
+                required
+                className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
+              />
+
+              {/* ================= PASSWORD ================= */}
+
+              {(roleType === "HOD" ||
+
+                roleType === "FACULTY") && (
+
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Enter Password"
+                  onChange={handleChange}
+                  required
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
+                />
+
+              )}
+
+              {/* ================= STUDENT OTP ================= */}
+
+              {roleType === "STUDENT" && !otpSent && (
+
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition"
+                >
+
+                  Send OTP
+
+                </button>
+
+              )}
+
+              {/* ================= OTP INPUT ================= */}
+
+              {roleType === "STUDENT" && otpSent && (
+
+                <input
+                  type="text"
+                  name="otp"
+                  placeholder="Enter OTP"
+                  onChange={handleChange}
+                  required
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
+                />
+
+              )}
+
+              {/* ================= LOGIN BUTTON ================= */}
+
+              {(
+                roleType !== "STUDENT" ||
+
+                otpSent
+              ) && (
+
+                <button
+                  type="submit"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg transition font-semibold"
+                >
+
+                  Login
+
+                </button>
+
+              )}
+
+            </form>
+
+            {/* ================= REGISTER ================= */}
+
+            <p className="text-center text-sm mt-6">
+
+              Don't have an account?
+
+              <span
+                onClick={() => navigate("/register")}
+                className="text-teal-500 font-semibold cursor-pointer ml-1"
+              >
+
+                Sign Up
+
+              </span>
+
+            </p>
+
+          </div>
 
         </div>
+
       </div>
+
     </div>
+
   );
+
 }
 
 export default Login;
