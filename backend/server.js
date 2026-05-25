@@ -1,5 +1,4 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import{connectDB} from './config/db.js';
 import userRoutes from './routes/user.routes.js';
 import studentRoutes from './routes/student.routes.js';
@@ -10,7 +9,7 @@ import report from "./routes/report.routes.js";
 import attendence from "./routes/attendance.routes.js";
 import profile from "./routes/profile.routes.js";
 import cors from 'cors';
-dotenv.config();
+import config from './config/config.js';
 
 
 
@@ -50,7 +49,7 @@ app.use('/api',classAssignRoutes);
 
 
 
-const PORT = process.env.PORT || 5000;
+const PORT = config.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port${PORT}`);

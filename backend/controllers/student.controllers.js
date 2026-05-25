@@ -4,7 +4,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Attendance from "../models/Attendance.models.js";
 import ClassAssign from "../models/classAssign.models.js";
-import nodemailer from "nodemailer";
+import OtpModel from "../models/otp.model.js";
+import { sendEmail } from "../services/email.service.js";
+import { generateOtp, getOtpHtml } from "../utils/utils.js";
+
 import fs from "fs";
 
 
@@ -42,209 +45,161 @@ error:error.message
 };
 
 
-
-
-
-
-// ============================
-// EMAIL TRANSPORTER
-// ============================
-
-
-const transporter = nodemailer.createTransport({
-
-  service: "gmail",
-
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASS,
-  },
-
-});
-
-
-// ============================
 // SEND OTP
-// ============================
-
 export const sendStudentOTP = async (req, res) => {
-
   try {
-
     const { email } = req.body;
 
     if (!email) {
-
       return res.status(400).json({
-        message: "Email required"
+        message: "Email required",
       });
-
     }
 
-    // FIND STUDENT
-    const student = await Student.findOne({ email });
-
-    if (!student) {
-
-      return res.status(404).json({
-        message: "Student not found"
-      });
-
-    }
-
-    // GENERATE OTP
-    const otp = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
-
-    // SAVE OTP
-    student.otp = otp;
-
-    student.otpExpiry =
-      Date.now() + 5 * 60 * 1000;
-
-    await student.save();
-
-    // SEND EMAIL
-    await transporter.sendMail({
-
-      from: process.env.EMAIL,
-
-      to: student.email,
-
-      subject: "Your Login OTP",
-
-      text: `Hello ${student.name},
-
-Your OTP for login is:
-
-${otp}
-
-This OTP will expire in 5 minutes.
-
-Regards
-Attendance Management System`,
-
+    // Find student
+    const student = await Student.findOne({
+      email: email.toLowerCase(),
     });
 
+    if (!student) {
+      return res.status(404).json({
+        message: "Student not found",
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOtp();
+
+    // Hash OTP
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    // Remove old OTP
+    await OtpModel.deleteMany({
+      email: email.toLowerCase(),
+      role: "STUDENT",
+    });
+
+    // Save OTP
+    await OtpModel.create({
+      email: email.toLowerCase(),
+      role: "STUDENT",
+      otpHash,
+    });
+
+    // Send Email
+    await sendEmail(
+      student.email,
+      "Student Login OTP",
+      `Your OTP is ${otp}`,
+      getOtpHtml(otp)
+    );
+
     res.status(200).json({
-
       success: true,
-
       message: "OTP sent successfully",
-
     });
 
   } catch (error) {
-
     console.log(error);
 
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
-
   }
-
 };
 
-
-// ============================
-// VERIFY OTP LOGIN
-// ============================
-
-export const verifyStudentOTP = async (req, res) => {
-
+export const verifyStudentOTP = async (
+  req,
+  res
+) => {
   try {
-
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-
       return res.status(400).json({
-        message: "Email and OTP required"
+        message: "Email and OTP required",
       });
-
     }
 
-    // FIND STUDENT
-    const student = await Student.findOne({ email });
+    // Find student
+    const student = await Student.findOne({
+      email: email.toLowerCase(),
+    });
 
     if (!student) {
-
       return res.status(404).json({
-        message: "Student not found"
+        message: "Student not found",
       });
-
     }
 
-    // CHECK OTP
-    if (student.otp !== otp) {
+    // Find OTP
+    const otpData = await OtpModel.findOne({
+      email: email.toLowerCase(),
+      role: "STUDENT",
+    });
 
+    if (!otpData) {
       return res.status(400).json({
-        message: "Invalid OTP"
+        message: "OTP expired",
       });
-
     }
 
-    // CHECK EXPIRY
-    if (student.otpExpiry < Date.now()) {
+    // Compare OTP
+    const isMatch = await bcrypt.compare(
+      otp,
+      otpData.otpHash
+    );
 
+    if (!isMatch) {
       return res.status(400).json({
-        message: "OTP expired"
+        message: "Invalid OTP",
       });
-
     }
 
-    // EMAIL VERIFIED
+    // Verify student
     student.isVerified = true;
-
-    // CLEAR OTP
-    student.otp = null;
-    student.otpExpiry = null;
 
     await student.save();
 
-    // GENERATE JWT
-    const token = jwt.sign(
+    // Delete OTP
+    await OtpModel.deleteOne({
+      _id: otpData._id,
+    });
 
+    // Generate JWT
+    const token = jwt.sign(
       {
         id: student._id,
         email: student.email,
         regNumber: student.regNumber,
-        role: "STUDENT"
+        role: "STUDENT",
       },
 
       process.env.JWT_SECRET,
 
       {
-        expiresIn: "1d"
+        expiresIn: "1d",
       }
-
     );
 
     res.status(200).json({
-
       success: true,
-
       message: "Login successful",
-
       token,
-
       role: "STUDENT",
-
     });
 
   } catch (error) {
-
     console.log(error);
 
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
-
   }
-
 };
+
+
+
 
 
 

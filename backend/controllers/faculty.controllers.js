@@ -4,6 +4,12 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import Attendance from "../models/Attendance.models.js";
 
+import OtpModel from "../models/otp.model.js";
+
+import { sendEmail } from "../services/email.service.js";
+import { generateOtp, getOtpHtml } from "../utils/utils.js";
+
+
 
 
 
@@ -11,152 +17,158 @@ import Attendance from "../models/Attendance.models.js";
 
 export const registerFaculty = async (req, res) => {
   try {
-    const { name, email, mobile, department,password } = req.body;
+    const {
+      name,
+      email,
+      mobile,
+      department,
+      password,
+    } = req.body;
 
+    // Check existing faculty
     const exists = await Faculty.findOne({
-      $or: [{ email }, { mobile }]
+      $or: [
+        { email: email.toLowerCase() },
+        { mobile },
+      ],
     });
 
     if (exists) {
       return res.status(400).json({
-        message: "Faculty already exists"
+        message: "Faculty already exists",
       });
     }
-       const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate OTP
+    const otp = generateOtp();
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(
+      password,
+      10
+    );
+
+    // Hash OTP
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    // Remove old OTP
+    await OtpModel.deleteMany({
+      email: email.toLowerCase(),
+      role: "FACULTY",
+    });
+
+    // Save OTP
+    await OtpModel.create({
+      email: email.toLowerCase(),
+      role: "FACULTY",
+      otpHash,
+    });
+
+    // Send OTP Email
+    await sendEmail(
+      email,
+      "Faculty Email Verification",
+      `Your OTP is ${otp}`,
+      getOtpHtml(otp)
+    );
+
+    // Response
+    res.status(200).json({
+      message: "OTP sent successfully",
+
+      data: {
+        name,
+        email: email.toLowerCase(),
+        mobile,
+        department,
+        password: hashedPassword,
+        role: "FACULTY",
+      },
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+
+// validate otp and create faculty
+  
+export const verifyFacultyOtp = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      name,
+      email,
+      mobile,
+      department,
+      password,
+      otp,
+    } = req.body;
+
+    // Find OTP
+    const otpData = await OtpModel.findOne({
+      email: email.toLowerCase(),
+      role: "FACULTY",
+    });
+
+    if (!otpData) {
+      return res.status(400).json({
+        message: "OTP expired",
+      });
+    }
+
+    // Compare OTP
+    const isMatch = await bcrypt.compare(
+      otp,
+      otpData.otpHash
+    );
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    // Create Faculty
     const faculty = await Faculty.create({
       name,
       email: email.toLowerCase(),
       mobile,
       department,
-      password: hashedPassword,
-      role: "FACULTY"
+      password,
+      role: "FACULTY",
+    });
+
+    // Delete OTP
+    await OtpModel.deleteOne({
+      _id: otpData._id,
     });
 
     res.status(201).json({
       message: "Faculty registered successfully",
+
       faculty: {
+        id: faculty._id,
         name: faculty.name,
         email: faculty.email,
-        department: faculty.department
-      }
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
-
-
-
-// SEND OTP (LOGIN STEP 1)
-
-/*export const sendFacultyOtp = async (req, res) => {
-
-  try {
-    const { emailOrMobile } = req.body;
-
-    const faculty = await Faculty.findOne({
-      $or: [
-        { email: emailOrMobile.toLowerCase() },
-        { mobile: emailOrMobile }
-      ]
-    });
-
-    if (!faculty) {
-      return res.status(404).json({
-        message: "Faculty not found"
-      });
-    }
-
-    // Generate 6 digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    faculty.otp = otp;
-    faculty.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-    await faculty.save();
-
-    // 👉 Later email/SMS send karna
-    console.log("Faculty OTP:", otp);
-
-    res.status(200).json({
-      message: "OTP sent successfully"
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
-
-// VERIFY OTP (LOGIN STEP 2)
-
-export const verifyFacultyOtp = async (req, res) => {
-  try {
-    const { emailOrMobile, otp } = req.body;
-
-    const faculty = await Faculty.findOne({
-      $or: [
-        { email: emailOrMobile.toLowerCase() },
-        { mobile: emailOrMobile }
-      ]
-    });
-
-    if (!faculty) {
-      return res.status(404).json({
-        message: "Faculty not found"
-      });
-    }
-
-    if (faculty.otp !== otp) {
-      return res.status(400).json({
-        message: "Invalid OTP"
-      });
-    }
-
-    if (faculty.otpExpiry < Date.now()) {
-      return res.status(400).json({
-        message: "OTP expired"
-      });
-    }
-
-    // clear OTP after use
-    faculty.otp = null;
-    faculty.otpExpiry = null;
-    await faculty.save();
-
-    // JWT Token
-    const token = jwt.sign(
-      {
-        id: faculty._id,
-        role: faculty.role,
-        department: faculty.department
+        department: faculty.department,
       },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    res.status(200).json({
-      message: "Faculty login successful",
-      token,
-      faculty: {
-        id: faculty._id,
-        name: faculty.name,
-        email: faculty.email,
-        department: faculty.department
-      }
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+    });
   }
-};*/
+};
 
-// faculty login with password (temporary until OTP is implemented)
 
+// LOGIN FACULTY
 export const loginfaculty = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -218,47 +230,7 @@ export const getAllFaculty = async (req, res) => {
   }
 };
 
-// assign class to faculty and get faculty classes
-
-
-
-/*export const getFacultyClasses = async (req, res) => {
-  try {
-
-    // ✅ safety check
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({
-        message: "User not authenticated"
-      });
-    }
-
-   
-    // ✅ mongoose auto casting karega
-    const classes = await ClassAssign.find({
-      faculty: req.user.id
-    })
-      .populate("subject", "subjectName subjectCode")
-      .populate("faculty", "name department")
-      .lean();
-
-      const validClasses = classes.filter(c => c.subject !== null);
-
-
-    
-
-    res.status(200).json({
-      success: true,
-      validClasses
-    });
-
-  } catch (error) {
-    console.error("ERROR =>", error);
-    res.status(500).json({
-      message: error.message
-    });
-  }
-};*/
-
+// GET FACULTY CLASSES
 
 export const getFacultyClasses =
   async (req, res) => {

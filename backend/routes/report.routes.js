@@ -9,11 +9,7 @@ import {
 const router =
   express.Router();
 
-/*router.get(
-  "/download-report",
-  downloadAttendanceReport
-);
-*/
+
 
 router.get(
   "/download-report",

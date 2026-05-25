@@ -5,51 +5,95 @@ import dotenv from "dotenv";
 
 import Student from "../models/Student.models.js";
 import Attendance from "../models/Attendance.models.js";
+import {sendEmail} from "../services/email.service.js";
+import OtpModel from "../models/otp.model.js";
+import {generateOtp,getOtpHtml} from "../utils/utils.js";
 import subject from "../models/subject.models.js";
 
 dotenv.config();
+
 
 export const registered = async (req, res) => {
   try {
     const { name, email, password, department } = req.body;
 
-    // 1 Check: department ka HOD already hai?
+    // Check department HOD
     const existingHod = await Hod.findOne({ department });
+
     if (existingHod) {
       return res.status(400).json({
         message: "Is department ka HOD pehle se registered hai",
       });
     }
 
-    // 2️ Password hash
+    // Check existing email
+    const existingEmail = await Hod.findOne({ email });
+
+    if (existingEmail) {
+      return res.status(400).json({
+        message: "Email already registered",
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOtp();
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3️ Create HOD
-    const hod = await Hod.create({
-      name,
+    // Hash OTP
+    
+const otpHash = await bcrypt.hash(
+  otp.toString(),
+  10
+);
+    // Delete old OTP
+    await OtpModel.deleteMany({
       email,
-      password: hashedPassword,
-      department,
-      role: "HOD", //  force HOD
+      role: "HOD",
     });
 
-    res.status(201).json({
-      message: "HOD registered successfully",
-      hod: {
-        id: hod._id,
-        name: hod.name,
-        department: hod.department,
-        role: hod.role,
+    // Save OTP Data
+    await OtpModel.create({
+  email: email.toLowerCase(),
+  role: "HOD",
+  otpHash,
+});
+
+    // Send Email
+    await sendEmail(
+      email,
+      "HOD Email Verification",
+      `Your OTP is ${otp}`,
+      getOtpHtml(otp)
+    );
+
+    // Temporary data response
+    res.status(200).json({
+      message: "OTP sent successfully",
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        department,
+        role: "HOD",
       },
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
 
-/*export const registered = async (req, res) => {
+// otp verify
+
+export const verifyHodOtp = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -57,147 +101,79 @@ export const registered = async (req, res) => {
       name,
       email,
       password,
-      department
+      department,
+      otp,
     } = req.body;
+    console.log("BODY:", req.body);
 
-    // =========================
-    // ALL FIELDS CHECK
-    // =========================
+console.log("HEADERS:", req.headers);
 
-    if (
-      !name ||
-      !email ||
-      !password ||
-      !department
-    ) {
+    console.log(req.body);
 
-      return res.status(400).json({
+    const otpData =
+      await OtpModel.findOne({
 
-        message:
-          "All fields are required",
-
-      });
-
-    }
-
-    // =========================
-    // HOD EMAIL CHECK
-    // =========================
-
-    if (
-      !email.includes("hod")
-    ) {
-
-      return res.status(400).json({
-
-        message:
-          "Use HOD email (email must contain 'hod')",
-
-      });
-
-    }
-
-    // =========================
-    // EMAIL ALREADY EXISTS
-    // =========================
-
-    const existingEmail =
-      await Hod.findOne({
-        email
-      });
-
-    if (existingEmail) {
-
-      return res.status(400).json({
-
-        message:
-          "Email already registered",
-
-      });
-
-    }
-
-    // =========================
-    // DEPARTMENT HOD CHECK
-    // =========================
-
-    const existingHod =
-      await Hod.findOne({
-
-        department
-
-      });
-
-    if (existingHod) {
-
-      return res.status(400).json({
-
-        message:
-          "This department already has a HOD",
-
-      });
-
-    }
-
-    // =========================
-    // PASSWORD HASH
-    // =========================
-
-    const hashedPassword =
-      await bcrypt.hash(
-        password,
-        10
-      );
-
-    // =========================
-    // CREATE HOD
-    // =========================
-
-    const hod =
-      await Hod.create({
-
-        name,
-
-        email,
-
-        password:
-          hashedPassword,
-
-        department,
+        email:
+          email.toLowerCase(),
 
         role: "HOD",
 
       });
 
-    // =========================
-    // RESPONSE
-    // =========================
+    console.log(otpData);
+
+    if (!otpData) {
+
+      return res.status(400).json({
+        message: "OTP expired",
+      });
+
+    }
+
+    const isMatch =
+      await bcrypt.compare(
+
+        otp.toString(),
+
+        otpData.otpHash
+
+      );
+
+    console.log(isMatch);
+
+    if (!isMatch) {
+
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+
+    }
+
+    const hod = await Hod.create({
+
+      name,
+
+      email:
+        email.toLowerCase(),
+
+      password,
+
+      department,
+
+      role: "HOD",
+
+    });
+
+    await OtpModel.deleteOne({
+      _id: otpData._id,
+    });
 
     res.status(201).json({
-
-      success: true,
 
       message:
         "HOD registered successfully",
 
-      hod: {
-
-        id:
-          hod._id,
-
-        name:
-          hod.name,
-
-        email:
-          hod.email,
-
-        department:
-          hod.department,
-
-        role:
-          hod.role,
-
-      },
+      hod,
 
     });
 
@@ -206,15 +182,12 @@ export const registered = async (req, res) => {
     console.log(error);
 
     res.status(500).json({
-
-      message:
-        error.message,
-
+      error: error.message,
     });
 
   }
 
-};*/
+};
 
 // login
 

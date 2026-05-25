@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.post("/create", createSubject);
 router.get("/", getSubjects);
-//router.get("/student", authemail,getSubjectsForStudent);
 
 
 router.get(

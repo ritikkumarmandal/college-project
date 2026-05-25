@@ -168,3 +168,18 @@ export const changePassword = (
     api.get(
       `/search-attendance/${regNumber}`
     );
+
+    export const hodverifyOtp = (data) => {
+  return api.post(
+    "/verify-otp",
+    data
+  );
+};
+
+
+export const facultyverifyOtp = (data) => {
+  return api.post(
+    "/faculty/verify-otp",
+    data
+  );
+};
