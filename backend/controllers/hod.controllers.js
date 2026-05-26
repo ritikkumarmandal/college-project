@@ -156,7 +156,7 @@ console.log("HEADERS:", req.headers);
       email:
         email.toLowerCase(),
 
-      password,
+      password: await bcrypt.hash(password, 10),
 
       department,
 
