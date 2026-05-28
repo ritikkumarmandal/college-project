@@ -6,173 +6,198 @@ import Attendance from "../models/Attendance.models.js";
 import ClassAssign from "../models/classAssign.models.js";
 import OtpModel from "../models/otp.model.js";
 import { sendEmail } from "../services/email.service.js";
-import { generateOtp, getOtpHtml } from "../utils/utils.js";
-
-import fs from "fs";
+import { generateOtp, getOtpHtml ,getStudentAccountHtml} from "../utils/utils.js";
 
 
-export const createStudent = async (req,res)=>{
 
-try{
+// Student Registration
 
-const { name,email,department,semester,regNumber } = req.body;
+export const createStudent =
+async (req, res) => {
 
-const student = new Student({
-name,
-email,
-regNumber,
-department,
-semester,
-password: null,        
- isFirstLogin: true     
-});
-
-await student.save();
-
-res.status(201).json({
-message:"Student created successfully",
-student
-});
-
-}catch(error){
-
-res.status(500).json({
-error:error.message
-});
-
-}
-
-};
-
-
-// SEND OTP
-export const sendStudentOTP = async (req, res) => {
   try {
-    const { email } = req.body;
 
-    if (!email) {
+    const {
+      name,
+      email,
+      department,
+      semester,
+      regNumber
+    } = req.body;
+
+    // check existing student
+
+    const existingStudent =
+      await Student.findOne({
+
+        $or: [
+          { email },
+          { regNumber }
+        ]
+
+      });
+
+    if (existingStudent) {
+
       return res.status(400).json({
-        message: "Email required",
+
+        message:
+          "Student already exists",
+
       });
+
     }
 
-    // Find student
-    const student = await Student.findOne({
-      email: email.toLowerCase(),
-    });
+    // generate temp password
 
-    if (!student) {
-      return res.status(404).json({
-        message: "Student not found",
+    const tempPassword =
+      Math.random()
+        .toString(36)
+        .slice(-8);
+
+    // hash password
+
+    const hashedPassword =
+      await bcrypt.hash(
+        tempPassword,
+        10
+      );
+
+    // create student
+
+    const student =
+      await Student.create({
+
+        name,
+
+        email:
+          email.toLowerCase(),
+
+        regNumber,
+
+        department,
+
+        semester,
+
+        password:
+          hashedPassword,
+
+        isFirstLogin: true,
+
+        role: "Student"
+
       });
-    }
 
-    // Generate OTP
-    const otp = generateOtp();
+    // send email
 
-    // Hash OTP
-    const otpHash = await bcrypt.hash(otp, 10);
-
-    // Remove old OTP
-    await OtpModel.deleteMany({
-      email: email.toLowerCase(),
-      role: "STUDENT",
-    });
-
-    // Save OTP
-    await OtpModel.create({
-      email: email.toLowerCase(),
-      role: "STUDENT",
-      otpHash,
-    });
-
-    // Send Email
     await sendEmail(
-      student.email,
-      "Student Login OTP",
-      `Your OTP is ${otp}`,
-      getOtpHtml(otp)
+
+      email,
+
+      "Student Account Created",
+
+      `Temporary Password:
+      ${tempPassword}`,
+
+      getStudentAccountHtml(
+        name,
+        email,
+        tempPassword
+      )
+
     );
 
-    res.status(200).json({
-      success: true,
-      message: "OTP sent successfully",
+    res.status(201).json({
+
+      message:
+        "Student created successfully",
+
+      student,
+
     });
 
   } catch (error) {
+
     console.log(error);
 
     res.status(500).json({
-      message: error.message,
+      error: error.message,
     });
+
   }
+
 };
 
-export const verifyStudentOTP = async (
+// student login
+
+export const studentLogin = async (
   req,
   res
 ) => {
+
   try {
-    const { email, otp } = req.body;
 
-    if (!email || !otp) {
-      return res.status(400).json({
-        message: "Email and OTP required",
+    const {
+      email,
+      password
+    } = req.body;
+
+    // check student
+
+    const student =
+      await Student.findOne({
+
+        email:
+          email.toLowerCase(),
+
       });
-    }
-
-    // Find student
-    const student = await Student.findOne({
-      email: email.toLowerCase(),
-    });
 
     if (!student) {
+
       return res.status(404).json({
-        message: "Student not found",
+        message:
+          "Student not found",
       });
+
     }
 
-    // Find OTP
-    const otpData = await OtpModel.findOne({
-      email: email.toLowerCase(),
-      role: "STUDENT",
-    });
+    // compare password
 
-    if (!otpData) {
-      return res.status(400).json({
-        message: "OTP expired",
-      });
-    }
+    const isMatch =
+      await bcrypt.compare(
 
-    // Compare OTP
-    const isMatch = await bcrypt.compare(
-      otp,
-      otpData.otpHash
-    );
+        password,
+
+        student.password
+
+      );
 
     if (!isMatch) {
+
       return res.status(400).json({
-        message: "Invalid OTP",
+
+        message:
+          "Invalid credentials",
+
       });
+
     }
 
-    // Verify student
-    student.isVerified = true;
+    // generate token
 
-    await student.save();
-
-    // Delete OTP
-    await OtpModel.deleteOne({
-      _id: otpData._id,
-    });
-
-    // Generate JWT
     const token = jwt.sign(
+
       {
+
         id: student._id,
+
         email: student.email,
-        regNumber: student.regNumber,
+
+        regNumber:
+          student.regNumber,
+
         role: "STUDENT",
+
       },
 
       process.env.JWT_SECRET,
@@ -180,56 +205,129 @@ export const verifyStudentOTP = async (
       {
         expiresIn: "1d",
       }
+
     );
 
     res.status(200).json({
+
       success: true,
-      message: "Login successful",
+
+      message:
+        "Login successful",
+
       token,
+
       role: "STUDENT",
+
+      isFirstLogin:
+        student.isFirstLogin,
+
     });
 
   } catch (error) {
+
     console.log(error);
 
     res.status(500).json({
       message: error.message,
     });
+
   }
+
 };
 
+// student forgot password
 
 
+export const changeStudentPassword =
+async (req, res) => {
 
-
-
-
-
-export const setPassword = async (req, res) => {
   try {
-    const { regNumber, newPassword } = req.body;
 
-    const student = await Student.findOne({ email });
+    const {
+      email,
+      oldPassword,
+      newPassword
+    } = req.body;
+
+    const student =
+      await Student.findOne({
+
+        email:
+          email.toLowerCase()
+
+      });
 
     if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+
+      return res.status(404).json({
+        message:
+          "Student not found",
+      });
+
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const isMatch =
+      await bcrypt.compare(
 
-    student.password = hashedPassword;
-    student.isFirstLogin = false;
+        oldPassword,
+
+        student.password
+
+      );
+
+    if (!isMatch) {
+
+      return res.status(400).json({
+
+        message:
+          "Old password incorrect",
+
+      });
+
+    }
+
+    // hash new password
+
+    const hashedPassword =
+      await bcrypt.hash(
+        newPassword,
+        10
+      );
+
+    student.password =
+      hashedPassword;
+
+    student.isFirstLogin =
+      false;
 
     await student.save();
 
     res.status(200).json({
-      message: "Password set successfully"
+
+      success: true,
+
+      message:
+        "Password changed successfully",
+
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+
   }
+
 };
+
+
+
+
+
 
 export const getAllStudents = async (req,res)=>{
 

@@ -347,6 +347,7 @@ setShowOtpBox(true);
       let res;
 
       // ================= VERIFY HOD =================
+      
            console.log(tempData);
       if (role === "HOD") {
 

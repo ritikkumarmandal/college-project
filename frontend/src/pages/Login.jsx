@@ -1,74 +1,57 @@
 import { useState } from "react";
+
 import {
+
   loginHod,
+
   loginfaculty,
-  sendStudentOTP,
-  verifyStudentOTP,
+
+  studentLogin,
+
 } from "../services/authService";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate }
+from "react-router-dom";
+
+
 
 function Login() {
 
   const navigate = useNavigate();
 
-  // ================= ROLE =================
-  const [roleType, setRoleType] = useState("HOD");
+  // ROLE
 
-  // ================= FORM =================
-  const [formData, setFormData] = useState({
+  const [roleType, setRoleType] =
+    useState("HOD");
 
-    email: "",
-    password: "",
-    otp: "",
+  // FORM
 
-  });
+  const [formData, setFormData] =
+    useState({
 
-  // ================= OTP STATE =================
-  const [otpSent, setOtpSent] = useState(false);
+      email: "",
 
-  // ================= INPUT CHANGE =================
+      password: "",
+
+    });
+
+  // INPUT CHANGE
+
   const handleChange = (e) => {
 
     setFormData({
 
       ...formData,
 
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
 
     });
 
   };
 
-  // ================= SEND OTP =================
-  const handleSendOTP = async () => {
+  // LOGIN
 
-    try {
-
-      const res = await sendStudentOTP({
-
-        email: formData.email,
-
-      });
-
-      alert(res.data.message);
-
-      setOtpSent(true);
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert(
-        error.response?.data?.message ||
-        "Failed to send OTP"
-      );
-
-    }
-
-  };
-
-  // ================= LOGIN =================
   const handleSubmit = async (e) => {
 
     e.preventDefault();
@@ -77,70 +60,124 @@ function Login() {
 
       let res;
 
-      // ================= HOD LOGIN =================
+      // HOD LOGIN
+
       if (roleType === "HOD") {
 
         res = await loginHod({
 
-          email: formData.email,
+          email:
+            formData.email,
 
-          password: formData.password,
+          password:
+            formData.password,
 
         });
 
       }
 
-      // ================= FACULTY LOGIN =================
-      else if (roleType === "FACULTY") {
+      // FACULTY LOGIN
+
+      else if (
+        roleType === "FACULTY"
+      ) {
 
         res = await loginfaculty({
 
-          email: formData.email,
+          email:
+            formData.email,
 
-          password: formData.password,
-
-        });
-
-      }
-
-      // ================= STUDENT OTP LOGIN =================
-      else if (roleType === "STUDENT") {
-
-        res = await verifyStudentOTP({
-
-          email: formData.email,
-
-          otp: formData.otp,
+          password:
+            formData.password,
 
         });
 
       }
 
-      // ================= TOKEN =================
-      const { token, role } = res.data;
+      // STUDENT LOGIN
 
-      localStorage.setItem("token", token);
+      else if (
+        roleType === "STUDENT"
+      ) {
 
-      localStorage.setItem("role", role);
+        res = await studentLogin({
+
+          email:
+            formData.email,
+
+          password:
+            formData.password,
+
+        });
+
+      }
+
+      // TOKEN
+
+      const {
+
+        token,
+
+        role,
+
+        isFirstLogin,
+
+      } = res.data;
+
+      localStorage.setItem(
+        "token",
+        token
+      );
+
+      localStorage.setItem(
+        "role",
+        role
+      );
 
       alert("Login Successful ✅");
 
-      // ================= REDIRECT =================
+      // FIRST LOGIN
+
+      if (
+        role === "STUDENT" &&
+        isFirstLogin
+      ) {
+
+        navigate(
+          "/student/change-password"
+        );
+
+        return;
+
+      }
+
+      // REDIRECT
+
       if (role === "HOD") {
 
-        navigate("/hod-dashboard");
+        navigate(
+          "/hod-dashboard"
+        );
 
       }
 
-      else if (role === "FACULTY") {
+      else if (
+        role === "FACULTY"
+      ) {
 
-        navigate("/faculty-dashboard");
+        navigate(
+          "/faculty-dashboard"
+        );
 
       }
 
-      else if (role === "STUDENT") {
+      else if (
+        role === "STUDENT"
+      ) {
 
-        navigate("/student-dashboard");
+        navigate(
+          "/student-dashboard"
+        );
 
       }
 
@@ -156,7 +193,8 @@ function Login() {
 
       alert(
 
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
 
         "Login Failed ❌"
 
@@ -166,21 +204,26 @@ function Login() {
 
   };
 
-  // ================= UI =================
+  // UI
+
   return (
 
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
 
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
 
-        {/* ================= LEFT SIDE ================= */}
+        {/* LEFT */}
 
         <div className="md:w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center p-8">
 
           <img
+
             src="https://cdn-icons-png.flaticon.com/512/295/295128.png"
+
             alt="login"
+
             className="w-40 md:w-60"
+
           />
 
           <h2 className="text-2xl md:text-3xl font-bold mt-6 text-center">
@@ -191,13 +234,14 @@ function Login() {
 
           <p className="mt-4 text-sm text-center">
 
-            Smart Attendance & Student Management
+            Smart Attendance &
+            Student Management
 
           </p>
 
         </div>
 
-        {/* ================= RIGHT SIDE ================= */}
+        {/* RIGHT */}
 
         <div className="md:w-1/2 flex items-center justify-center p-6 md:p-10">
 
@@ -214,18 +258,22 @@ function Login() {
               className="space-y-5"
             >
 
-              {/* ================= ROLE ================= */}
+              {/* ROLE */}
 
               <select
+
                 value={roleType}
+
                 onChange={(e) => {
 
-                  setRoleType(e.target.value);
-
-                  setOtpSent(false);
+                  setRoleType(
+                    e.target.value
+                  );
 
                 }}
+
                 className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
+
               >
 
                 <option value="HOD">
@@ -248,95 +296,72 @@ function Login() {
 
               </select>
 
-              {/* ================= EMAIL ================= */}
+              {/* EMAIL */}
 
               <input
+
                 type="email"
+
                 name="email"
+
                 placeholder="Enter Email"
+
                 onChange={handleChange}
+
                 required
+
                 className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
+
               />
 
-              {/* ================= PASSWORD ================= */}
+              {/* PASSWORD */}
 
-              {(roleType === "HOD" ||
+              <input
 
-                roleType === "FACULTY") && (
+                type="password"
 
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Enter Password"
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
-                />
+                name="password"
 
-              )}
+                placeholder="Enter Password"
 
-              {/* ================= STUDENT OTP ================= */}
+                onChange={handleChange}
 
-              {roleType === "STUDENT" && !otpSent && (
+                required
 
-                <button
-                  type="button"
-                  onClick={handleSendOTP}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition"
-                >
+                className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
 
-                  Send OTP
+              />
 
-                </button>
+              {/* LOGIN BUTTON */}
 
-              )}
+              <button
 
-              {/* ================= OTP INPUT ================= */}
+                type="submit"
 
-              {roleType === "STUDENT" && otpSent && (
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg transition font-semibold"
 
-                <input
-                  type="text"
-                  name="otp"
-                  placeholder="Enter OTP"
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:border-teal-500"
-                />
+              >
 
-              )}
+                Login
 
-              {/* ================= LOGIN BUTTON ================= */}
-
-              {(
-                roleType !== "STUDENT" ||
-
-                otpSent
-              ) && (
-
-                <button
-                  type="submit"
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg transition font-semibold"
-                >
-
-                  Login
-
-                </button>
-
-              )}
+              </button>
 
             </form>
 
-            {/* ================= REGISTER ================= */}
+            {/* REGISTER */}
 
             <p className="text-center text-sm mt-6">
 
               Don't have an account?
 
               <span
-                onClick={() => navigate("/register")}
+
+                onClick={() =>
+                  navigate("/register")
+                }
+
                 className="text-teal-500 font-semibold cursor-pointer ml-1"
+
               >
 
                 Sign Up

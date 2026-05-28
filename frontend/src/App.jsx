@@ -9,7 +9,7 @@ import CreateStudent from "./components/CreateStudent";
 import UploadStudents from "./components/UploadStudents";
 import FacultyDashboard from "./pages/FacultyDashboard";
 import StudentDashbord from "./pages/StudentDashboard";
-import SetPassword from "./pages/SetPassword";
+import ChangePassword from "./pages/ChangePassword";
 
 function App() {
   
@@ -28,7 +28,11 @@ function App() {
          < Route path="/hod-dashboard" element={< UploadStudents/>}/>
          < Route path="/faculty-dashboard" element={< FacultyDashboard/>}/>
          < Route path="/student-dashboard" element={<  StudentDashbord/>}/>
-         <Route path="/set-password" element={<SetPassword />} />
+        
+         <Route
+  path="/student/change-password"
+  element={<ChangePassword />}
+/>
 
       </Routes>
 

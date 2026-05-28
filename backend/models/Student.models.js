@@ -36,31 +36,43 @@ const studentSchema =
     },
 
     // PROFILE IMAGE
+
     profileImage: {
       type: String,
       default: "",
     },
 
     otp: {
-  type: String,
-},
+      type: String,
+    },
 
-otpExpiry: {
-  type: Date,
-},
+    otpExpiry: {
+      type: Date,
+    },
 
-isVerified: {
-  type: Boolean,
-  default: false,
-},
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    // FIRST LOGIN
+
+    isFirstLogin: {
+      type: Boolean,
+      default: true,
+    },
 
   },
+
   {
     timestamps: true,
-  });
+  }
+
+);
 
 const Student =
   mongoose.models.Student ||
+
   mongoose.model(
     "Student",
     studentSchema

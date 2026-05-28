@@ -24,6 +24,16 @@ export const loginfaculty = (data) =>
 export const createstudent = (data) =>
   api.post("/students/create", data );
 
+
+export const studentLogin = (data) =>
+  api.post("/students/login", data);
+
+export const changeStudentPassword = (data) =>
+  api.post(
+    "/students/change-password",
+    data
+  );
+
  export const uploadStudents = async (file) => {
 
   const formData = new FormData();
@@ -83,14 +93,7 @@ export const getAttendanceReport = (department, semester, subjectId) =>
     params: { department, semester, subjectId }
   });
 
-  export const verifyStudentOTP = (data) =>
-  api.post("/students/login", data);
-
-  export const sendStudentOTP = (data) =>
-  api.post("/students/send-otp", data);
-
-  export const setStudentPassword = (data) =>
-  api.post("/students/set-password", data);
+  
 
 
   

@@ -112,3 +112,83 @@ export function getAttendanceHtml(
   </html>
   `;
 }
+
+export function getStudentAccountHtml(
+  name,
+  email,
+  tempPassword
+) {
+
+  return `
+  <!DOCTYPE html>
+
+  <html>
+
+  <head>
+
+    <style>
+
+      body{
+        font-family: Arial;
+        background:#f4f4f4;
+        padding:20px;
+      }
+
+      .container{
+        max-width:500px;
+        margin:auto;
+        background:white;
+        padding:20px;
+        border-radius:10px;
+      }
+
+      .password{
+        font-size:22px;
+        font-weight:bold;
+        color:#2563eb;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <h2>
+        Student Account Created
+      </h2>
+
+      <p>
+        Hello ${name},
+      </p>
+
+      <p>
+        Your student account has been
+        created successfully.
+      </p>
+
+      <p>
+        <b>Email:</b> ${email}
+      </p>
+
+      <p class="password">
+
+        Temporary Password:
+        ${tempPassword}
+
+      </p>
+
+      <p>
+        Please login and change your
+        password after first login.
+      </p>
+
+    </div>
+
+  </body>
+
+  </html>
+  `;
+}
