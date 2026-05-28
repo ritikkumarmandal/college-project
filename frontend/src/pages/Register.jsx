@@ -401,12 +401,10 @@ setShowOtpBox(true);
 
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-
+    <div className="min-h-screen bg-gray-100 flex justify-center items-start lg:items-center px-4 py-6">
       {/* MAIN CARD */}
 
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl flex flex-col lg:flex-row overflow-hidden">
-
+     <div className="w-full max-w-5xl my-4 bg-white rounded-2xl shadow-xl flex flex-col lg:flex-row overflow-hidden">
         {/* LEFT SIDE */}
 
         <div className="w-full lg:w-1/2 bg-teal-500 text-white flex flex-col justify-center items-center p-6 lg:p-10">
