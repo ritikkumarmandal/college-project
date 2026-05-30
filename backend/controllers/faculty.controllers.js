@@ -14,28 +14,19 @@ import { generateOtp, getOtpHtml } from "../utils/utils.js";
 
 
 // REGISTER FACulty
-
 export const registerFaculty = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      mobile,
-      department,
-      password,
-    } = req.body;
+    const { name, email, password, department } = req.body;
 
-    // Check existing faculty
-    const exists = await Faculty.findOne({
-      $or: [
-        { email: email.toLowerCase() },
-        { mobile },
-      ],
-    });
+    // Check department HOD
+   
 
-    if (exists) {
+    // Check existing email
+    const existingEmail = await Faculty.findOne({ email });
+
+    if (existingEmail) {
       return res.status(400).json({
-        message: "Faculty already exists",
+        message: "Email already registered",
       });
     }
 
@@ -43,28 +34,28 @@ export const registerFaculty = async (req, res) => {
     const otp = generateOtp();
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(
-      password,
-      10
-    );
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Hash OTP
-    const otpHash = await bcrypt.hash(otp, 10);
-
-    // Remove old OTP
+    
+const otpHash = await bcrypt.hash(
+  otp.toString(),
+  10
+);
+    // Delete old OTP
     await OtpModel.deleteMany({
-      email: email.toLowerCase(),
+      email,
       role: "FACULTY",
     });
 
-    // Save OTP
+    // Save OTP Data
     await OtpModel.create({
-      email: email.toLowerCase(),
-      role: "FACULTY",
-      otpHash,
-    });
+  email: email.toLowerCase(),
+  role: "FACULTY",
+  otpHash,
+});
 
-    // Send OTP Email
+    // Send Email
     await sendEmail(
       email,
       "Faculty Email Verification",
@@ -72,16 +63,14 @@ export const registerFaculty = async (req, res) => {
       getOtpHtml(otp)
     );
 
-    // Response
+    // Temporary data response
     res.status(200).json({
       message: "OTP sent successfully",
-
       data: {
         name,
-        email: email.toLowerCase(),
-        mobile,
-        department,
+        email,
         password: hashedPassword,
+        department,
         role: "FACULTY",
       },
     });
@@ -94,110 +83,137 @@ export const registerFaculty = async (req, res) => {
 };
 
 
+
+
 // validate otp and create faculty
   
-export const verifyFacultyOtp = async (
+export const verifyFacultyOtp  = async (
   req,
   res
 ) => {
+
   try {
+
     const {
       name,
       email,
-      mobile,
-      department,
       password,
+      department,
       otp,
     } = req.body;
+    console.log("BODY:", req.body);
 
-    // Find OTP
-    const otpData = await OtpModel.findOne({
-      email: email.toLowerCase(),
-      role: "FACULTY",
-    });
+console.log("HEADERS:", req.headers);
+
+    console.log(req.body);
+
+    const otpData =
+      await OtpModel.findOne({
+
+        email:
+          email.toLowerCase(),
+
+        role: "FACULTY",
+
+      });
+
+    console.log(otpData);
 
     if (!otpData) {
+
       return res.status(400).json({
         message: "OTP expired",
       });
+
     }
 
-    // Compare OTP
-    const isMatch = await bcrypt.compare(
-      otp,
-      otpData.otpHash
-    );
+    const isMatch =
+      await bcrypt.compare(
+
+        otp.toString(),
+
+        otpData.otpHash
+
+      );
+
+    console.log(isMatch);
 
     if (!isMatch) {
+
       return res.status(400).json({
         message: "Invalid OTP",
       });
+
     }
 
-    // Create Faculty
     const faculty = await Faculty.create({
+
       name,
-      email: email.toLowerCase(),
-      mobile,
+
+      email:
+        email.toLowerCase(),
+
+      password: await bcrypt.hash(password, 10),
+
       department,
-      password,
+
       role: "FACULTY",
+
     });
 
-    // Delete OTP
     await OtpModel.deleteOne({
       _id: otpData._id,
     });
 
     res.status(201).json({
-      message: "Faculty registered successfully",
 
-      faculty: {
-        id: faculty._id,
-        name: faculty.name,
-        email: faculty.email,
-        department: faculty.department,
-      },
+      message:
+        " faculty registered successfully",
+       
+        faculty
+      ,
+
     });
 
   } catch (error) {
+
+    console.log(error);
+
     res.status(500).json({
       error: error.message,
     });
+
   }
+
 };
 
 
+
 // LOGIN FACULTY
-export const loginfaculty = async (req, res) => {
+export const loginfaculty= async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const FACULTY = await Faculty.findOne({ email });
-    if (!FACULTY) {
-      return res.status(404).json({ message: "Faculty not found" });
+    const faculty = await Faculty.findOne({ email });
+    if (!faculty) {
+      return res.status(404).json({ message: "faculty not found" });
     }
 
-    const isMatch = await bcrypt.compare(password, FACULTY.password);
+    const isMatch = await bcrypt.compare(password, faculty.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // ✅ FIX HERE
     const token = jwt.sign(
-      {
-        id: FACULTY._id,   // ⭐ IMPORTANT FIX
-        role: FACULTY.role,
-        department: FACULTY.department,
-      },
+      { id: faculty._id, role: faculty.role, department: faculty.department },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     res.status(200).json({
-      message: "Faculty login successful",
+      message: "faculty login successful",
       token,
-      role: FACULTY.role,
+      role: faculty.role,
     });
 
   } catch (error) {

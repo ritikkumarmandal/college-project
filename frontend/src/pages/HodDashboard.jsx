@@ -31,7 +31,7 @@ const WelcomeBanner = ({
   setActivePage,
 }) => (
 
-  <div className="bg-white p-6 rounded-xl shadow mb-6 flex items-center justify-between">
+  <div className="bg-white p-4 sm:p-6 rounded-xl shadow mb-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
 
     <div>
 
@@ -51,7 +51,7 @@ const WelcomeBanner = ({
       onClick={() =>
         setActivePage("profile")
       }
-      className="flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-xl transition"
+      className="w-full sm:w-auto flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-xl transition"
     >
 
       <img
@@ -84,6 +84,7 @@ const [selectedSubject,
 setSelectedSubject] =
 useState(null);
 
+const [sidebarOpen, setSidebarOpen] = useState(false);
 
 // Fetch Faculty Classes
   useEffect(() => {
@@ -210,138 +211,239 @@ case "view-subjects":
         );
 
       default:
-        return (
-           <div className="bg-white p-6 rounded-xl shadow">
+  return (
+    <div className="bg-white p-6 rounded-xl shadow">
       <p className="text-gray-500">
         Please select an option from sidebar.
       </p>
     </div>
-        );
-    }
+  );
+      }
   };
+      return (
 
-  return (
-    <div className="flex min-h-screen">
+  <div className="min-h-screen bg-gray-100 flex">
 
-      {/* SIDEBAR */}
-      <div className="w-64 bg-white shadow-lg p-6">
+    {/* MOBILE OVERLAY */}
 
-        <h1 className="text-2xl font-bold text-green-600 mb-8">
+    {sidebarOpen && (
+      <div
+        className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+        onClick={() =>
+          setSidebarOpen(false)
+        }
+      />
+    )}
+
+    {/* SIDEBAR */}
+
+    <div
+      className={`
+        fixed lg:static top-0 left-0 z-50
+        h-screen w-72 bg-white shadow-lg p-6
+        transform transition-transform duration-300
+        ${
+          sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
+        }
+        lg:translate-x-0
+      `}
+    >
+
+      {/* SIDEBAR TOP */}
+
+      <div className="flex items-center justify-between mb-8">
+
+        <h1 className="text-2xl font-bold text-green-600">
           HOD Dashboard
         </h1>
 
-        <div className="space-y-4">
-
-          <button
-            onClick={() => setActivePage("create-student")}
-            className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-          >
-            Create Student
-          </button>
-
-          <button
-            onClick={() => setActivePage("upload-students")}
-            className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-          >
-            Upload Students
-          </button>
-
-          <button
-            onClick={() => setActivePage("faculty-show")}
-            className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-          >
-            Faculty Show
-          </button>
-
-          <h2 className="text-gray-400 text-sm mt-6 mb-2">
-            Subject Management
-        </h2>
-
-       <button
-      onClick={() => setActivePage("create-subject")}
-       className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-       >
-     Create Subject
-       </button>
-
-      <button
-  onClick={() => setActivePage("view-subjects")}
-  className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-   >
-     View Semester Subjects
-     </button>
-      
-       <button
-  onClick={() => setActivePage("assign-subjects")}
-  className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-   >
-     Assign class
-     </button>
-
-
-    
-
-     <button
-  onClick={() =>
-    setActivePage(
-      "student-attendance"
-    )
-  }
-  className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
->
-  Student Attendance
-</button>
-
-
-<button
-  onClick={() =>
-    setActivePage(
-      "show-class"
-    )
-  }
-  className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-  >
-     My Classes
-  </button>
-
-
-  <button
-  onClick={() =>
-    setActivePage("mark-attendance")
-  }
-  className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-  >
-  Mark Attendance
-</button>
-
-
         <button
-            onClick={() =>
-              setActivePage(
-                "get-attendance-report"
-              )
-            }
-            className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
-          >
-            Show Attendance Report
-          </button>
-        </div>
+          className="lg:hidden text-3xl"
+          onClick={() =>
+            setSidebarOpen(false)
+          }
+        >
+          ✕
+        </button>
+
       </div>
 
-     
+      {/* MENU */}
 
-      {/* RIGHT CONTENT */}
-      <div className="flex-1 bg-gray-100 p-8">
-         <WelcomeBanner
-  setActivePage={
-    setActivePage
-  }
-/> 
+      <div className="space-y-3 overflow-y-auto h-[85vh] pr-2">
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "create-student"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Create Student
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "upload-students"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Upload Students
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "faculty-show"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Faculty Show
+        </button>
+
+        <h2 className="text-gray-400 text-sm mt-6 mb-2">
+          Subject Management
+        </h2>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "create-subject"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Create Subject
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "view-subjects"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          View Semester Subjects
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "assign-subjects"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Assign Class
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "student-attendance"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Student Attendance
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "show-class"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          My Classes
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "mark-attendance"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Mark Attendance
+        </button>
+
+        <button
+          onClick={() => {
+            setActivePage(
+              "get-attendance-report"
+            );
+            setSidebarOpen(false);
+          }}
+          className="w-full text-left p-3 rounded-lg hover:bg-green-500 hover:text-white"
+        >
+          Show Attendance Report
+        </button>
+
+      </div>
+    </div>
+
+    {/* MAIN CONTENT */}
+
+    <div className="flex-1 lg:ml-0">
+
+      {/* MOBILE HEADER */}
+
+      <div className="lg:hidden bg-white shadow-md px-4 py-4 flex items-center justify-between">
+
+        <h1 className="text-xl font-bold text-green-600">
+          Dashboard
+        </h1>
+
+        <button
+          className="text-3xl"
+          onClick={() =>
+            setSidebarOpen(true)
+          }
+        >
+          ☰
+        </button>
+
+      </div>
+
+      {/* CONTENT */}
+
+      <div className="p-4 sm:p-6 lg:p-8">
+
+        <WelcomeBanner
+          setActivePage={
+            setActivePage
+          }
+        />
+
         {renderContent()}
+
       </div>
 
     </div>
-  );
+
+  </div>
+
+);  
+
 }
 
 export default HodDashboard;

@@ -5,10 +5,11 @@ import Attendance from "../models/Attendance.models.js";
 import Student from "../models/Student.models.js";
 import Subject from "../models/subject.models.js";
 
-import { getAttendanceHtml }
+import { sendEmail}
 
-from "../utils/utils.js";
+from "../services/email.service.js";
 
+import { getAttendanceHtml } from "../utils/utils.js";
 
 
 export const getAttendanceReport = async (req, res) => {
@@ -326,41 +327,45 @@ const emailDate = today;
 
     // ================= SEND EMAIL =================
 
-    for (const s of students) {
+    
+// ================= SEND EMAIL =================
 
-      const studentData =
-        await Student.findById(
+for (const s of students) {
 
-          s.studentId ||
+  const studentData =
+    await Student.findById(
 
-          s.student ||
+      s.studentId ||
 
-          s._id
+      s.student ||
 
-        );
+      s._id
 
-      if (studentData?.email) {
+    );
 
-        await sendAttendanceEmail(
+  if (studentData?.email) {
 
-          studentData.email,
+    await sendEmail(
 
-          studentData.name,
+      studentData.email,
 
-          studentData.regNumber,
+      "Attendance Status",
 
-          subjectName,
+      `Your attendance status is ${s.status}`,
 
-          s.status,
+      getAttendanceHtml(
+        studentData.name,
+        studentData.regNumber,
+        subjectName,
+        s.status,
+        emailDate
+      )
 
-          emailDate
+    );
 
-        );
+  }
 
-      }
-
-    }
-
+}
     // ================= RESPONSE =================
 
     res.status(201).json({

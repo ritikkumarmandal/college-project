@@ -216,7 +216,6 @@ function Register() {
 
     name: "",
     email: "",
-    mobile: "",
     password: "",
     department: "",
     regNumber: "",

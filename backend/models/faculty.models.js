@@ -10,10 +10,6 @@ const facultySchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  mobile: {
-    type: String,
-    unique:true
-  },
   department: {
     type: String,
     required: true
